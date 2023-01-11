@@ -1,4 +1,4 @@
-import { Canvas } from "./Canvas";
+import { Canvas, CanvasSizeOptions } from "./Canvas";
 import { KeyboardInput } from "./KeyboardInput";
 import { MouseInput, MouseInputWithCollision, MouseInputWithoutCollision } from "./MouseInput";
 
@@ -41,17 +41,19 @@ const defaultJaPNaAEngineOptions: Required<JaPNaAEngine2dOptions> = {
 };
 
 /**
- * Default CanvasSizeOptions if canvasSize is not 'auto'
+ * Default CanvasSizeOptions
  */
-const defaultCanvasSizeOptionsNotAuto: Required<CanvasSizeOptions> = {
-    width: 1280,
-    height: 720,
+const defaultCanvasSizeOptions: Required<CanvasSizeOptions> = {
+    width: 'auto',
+    height: 'auto',
+    autoResize: true,
+    centering: true,
     sizingMethod: 'resize',
     sizing: 'fit',
-    dpr: true
+    dpr: 'scale'
 };
 
-interface JaPNaAEngine2dOptions {
+export interface JaPNaAEngine2dOptions {
     /**
      * Controls the canvas size.
      * 
@@ -98,63 +100,4 @@ interface JaPNaAEngine2dOptions {
      * default: false
      */
     mouseInCollisionSystem?: boolean;
-}
-
-interface CanvasSizeOptions {
-    /**
-     * Width of the canvas.
-     * 
-     * 'auto' corresponds to innerWidth
-     */
-    width: number | 'auto';
-
-    /**
-     * Height of the canvas.
-     * 
-     * 'auto' corresponds to innerHeight
-     */
-    height: number | 'auto';
-
-    /**
-     * Controls if the canvas will automatically resize when the user resizes the window
-     * 
-     * default: true
-     */
-    autoResize: boolean;
-
-    /**
-     * Controls how large the canvas will resize to.
-     *   - 'none' - The canvas will not become larger or smaller than your specified width and height
-     *     - If width or height is 'auto', the canvas will still resize. If you don't want the canvas to change size during runtime, set `autoResize: false`
-     *   - 'fit' - be as large as possible without going outside the screen (retaining aspect ratio)
-     *   - 'cover' - zoom to cover the entire screen (retaining aspect ratio). Some pixels may be lost.
-     *     - Usually `{ width: 'auto', height: 'auto', resizing: 'none' }` is a better option
-     * 
-     * default: fit
-     */
-    sizing?: 'none' | 'cover' | 'fit';
-
-
-    /**
-     * Controls the method to resize the canvas
-     *   - 'resize' - Changes the canvas's width and height, retaining aspect ratio
-     *   - 'scale' - Enlarges the canvas without changing width and height
-     * 
-     * default: 'resize'; no effect if resizing is 'none'
-     */
-    sizingMethod?: 'resize' | 'scale';
-
-    /**
-     * Controls how the canvas responds to the devicePixelRatio
-     *   - 'none' - No effect (width = targetWidth; height = targetHeight)
-     *   - 'scale' - Scales up the canvas (actualWidth = targetWidth * dpr; actualHeight = targetHeight * dpr; renderingContext.scale(dpr, dpr); width = targetWidth; height = targetHeight)
-     *      - Your app will still the the canvas size uneffected by devicePixelRatio, but the rendering will be done on a larger canvas
-     *   - 'oneToOne' - (width = targetWidth * dpr; height = targetHeight * dpr)
-     *      - The canvas will retain a one-to-one ratio with the screen's pixels.
-     *      - Your app will have to manually adjust for the devicePixelRatio
-     * If the canvas size should change based on the dpr.
-     * 
-     * default: 'scale'
-     */
-    dpr?: 'none' | 'scale' | 'oneToOne';
 }

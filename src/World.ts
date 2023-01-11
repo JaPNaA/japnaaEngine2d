@@ -27,7 +27,7 @@ export class World {
     private maxTickTimeElapse = 0.020;
 
     constructor() {
-        this.canvas.resizeToScreen();
+        this.canvas.resizeBasedOnScreen();
     }
 
     public startListen() {

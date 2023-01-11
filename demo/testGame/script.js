@@ -6,3 +6,4 @@ console.log(new JaPNaAEngine2d());
 // EventBus
 // MouseInput (with and without collision)
 // KeyboardInput (superbus: especially subscribing and unsubscribing)
+// Canvas sizing
