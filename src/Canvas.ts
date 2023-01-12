@@ -35,6 +35,7 @@ export class Canvas {
         if (!this.X) { alert("Browser not supported"); throw new Error("Browser not supported: cannot get canvas context"); }
 
         this.resizeHandler = this.resizeHandler.bind(this);
+        addEventListener("resize", this.resizeHandler);
         this.resizeHandler();
     }
 
@@ -93,12 +94,12 @@ export class Canvas {
                 return [innerHeight * targetWidthHeightRatio, innerHeight];
             } else {
                 // height is limiting
-                return [innerWidth, innerHeight / targetWidthHeightRatio];
+                return [innerWidth, innerWidth / targetWidthHeightRatio];
             }
         } else if (this.options.sizing === "cover") {
             if (targetWidthHeightRatio < screenWidthHeightRatio) {
                 // width is smaller
-                return [innerWidth, innerHeight / targetWidthHeightRatio];
+                return [innerWidth, innerWidth / targetWidthHeightRatio];
             } else {
                 // height is bigger
                 return [innerHeight * targetWidthHeightRatio, innerHeight];
@@ -108,11 +109,7 @@ export class Canvas {
         }
     }
 
-    public _startAutoResize() {
-        addEventListener("resize", this.resizeHandler);
-    }
-
-    public _stopAutoResize() {
+    public _dispose() {
         removeEventListener("resize", this.resizeHandler);
     }
 
@@ -127,81 +124,81 @@ export class Canvas {
     }
 }
 
-class Canvas2 {
-    private canvas: HTMLCanvasElement;
+// class Canvas2 {
+//     private canvas: HTMLCanvasElement;
 
-    constructor(o: { width: number, height: number }) {
-        this.canvas = document.createElement("canvas");
-        this.canvas.classList.add("JaPNaA");
-        this.canvas.width = o.width;
-        this.canvas.height = o.height;
+//     constructor(o: { width: number, height: number }) {
+//         this.canvas = document.createElement("canvas");
+//         this.canvas.classList.add("JaPNaA");
+//         this.canvas.width = o.width;
+//         this.canvas.height = o.height;
 
-        addEventListener("resize", this.resizeHandler.bind(this));
-        this.resizeHandler();
-    }
+//         addEventListener("resize", this.resizeHandler.bind(this));
+//         this.resizeHandler();
+//     }
 
-    public appendTo(parent: HTMLElement) {
-        parent.appendChild(this.canvas);
-    }
+//     public appendTo(parent: HTMLElement) {
+//         parent.appendChild(this.canvas);
+//     }
 
-    private resizeHandler() {
-    }
-    resize() {
-        if (this.resizing || !this.started && this.lastSize.has) return;
-        var dpr = window.devicePixelRatio || 1,
-            w = window.innerWidth,
-            h = window.innerHeight;
+//     private resizeHandler() {
+//     }
+//     resize() {
+//         if (this.resizing || !this.started && this.lastSize.has) return;
+//         var dpr = window.devicePixelRatio || 1,
+//             w = window.innerWidth,
+//             h = window.innerHeight;
 
-        if (w == this.lastSize.w && h == this.lastSize.h && this.lastSize.has) {
-            this.resizing = true;
-            this.resizeLoop();
-            return;
-        }
+//         if (w == this.lastSize.w && h == this.lastSize.h && this.lastSize.has) {
+//             this.resizing = true;
+//             this.resizeLoop();
+//             return;
+//         }
 
-        if (h * this.ratio < w) {
-            this.canvas.classList.remove("h");
-            document.body.classList.remove("h");
+//         if (h * this.ratio < w) {
+//             this.canvas.classList.remove("h");
+//             document.body.classList.remove("h");
 
-            this.canvas.width = h * this.ratio * dpr;
-            this.canvas.height = h * dpr;
+//             this.canvas.width = h * this.ratio * dpr;
+//             this.canvas.height = h * dpr;
 
-            this.offsetX = (w - this.canvas.width / dpr) / 2;
-            this.canvas.style.left = this.offsetX + "px";
+//             this.offsetX = (w - this.canvas.width / dpr) / 2;
+//             this.canvas.style.left = this.offsetX + "px";
 
-            this.offsetY = 0;
-            this.canvas.style.top = 0;
-        } else {
-            this.canvas.classList.add("h");
-            document.body.classList.add("h");
+//             this.offsetY = 0;
+//             this.canvas.style.top = 0;
+//         } else {
+//             this.canvas.classList.add("h");
+//             document.body.classList.add("h");
 
-            this.canvas.width = w * dpr;
-            this.canvas.height = w / this.ratio * dpr;
+//             this.canvas.width = w * dpr;
+//             this.canvas.height = w / this.ratio * dpr;
 
-            this.offsetX = 0;
-            this.canvas.style.left = 0;
+//             this.offsetX = 0;
+//             this.canvas.style.left = 0;
 
-            this.offsetY = (h - this.canvas.height / dpr) / 2;
-            this.canvas.style.top = this.offsetY + "px";
-        }
+//             this.offsetY = (h - this.canvas.height / dpr) / 2;
+//             this.canvas.style.top = this.offsetY + "px";
+//         }
 
-        this.lastSize.w = window.innerWidth;
-        this.lastSize.h = window.innerHeight;
-        this.lastSize.has = true;
+//         this.lastSize.w = window.innerWidth;
+//         this.lastSize.h = window.innerHeight;
+//         this.lastSize.has = true;
 
-        this.X.resetTransform();
-        this.scaleX = this.canvas.width / this.width;
-        this.scaleY = this.canvas.height / this.height;
-        this.X.scale(this.scaleX, this.scaleY);
-    }
-    resizeLoop() { // because ios is bad
-        if (window.innerWidth == this.lastSize.w && window.innerHeight == this.lastSize.h) {
-            requestAnimationFrame(() => this.resizeLoop());
-        } else {
-            this.resizing = false;
-            this.resize();
-        }
-    }
-}
+//         this.X.resetTransform();
+//         this.scaleX = this.canvas.width / this.width;
+//         this.scaleY = this.canvas.height / this.height;
+//         this.X.scale(this.scaleX, this.scaleY);
+//     }
+//     resizeLoop() { // because ios is bad
+//         if (window.innerWidth == this.lastSize.w && window.innerHeight == this.lastSize.h) {
+//             requestAnimationFrame(() => this.resizeLoop());
+//         } else {
+//             this.resizing = false;
+//             this.resize();
+//         }
+//     }
+// }
 
 
 export interface CanvasSizeOptions {
@@ -212,7 +209,7 @@ export interface CanvasSizeOptions {
      * 
      * default: 'auto'
      */
-    width: number | 'auto';
+    width?: number | 'auto';
 
     /**
      * Height of the canvas.
@@ -221,21 +218,21 @@ export interface CanvasSizeOptions {
      * 
      * default: 'auto'
      */
-    height: number | 'auto';
+    height?: number | 'auto';
 
     /**
      * Controls if the canvas will automatically resize when the user resizes the window
      * 
      * default: true
      */
-    autoResize: boolean;
+    autoResize?: boolean;
 
     /**
      * Controls if the canvas should be aligned at the center of the window.
      * 
      * default: true
      */
-    centering: boolean;
+    centering?: boolean;
 
     /**
      * Controls how large the canvas will resize to.

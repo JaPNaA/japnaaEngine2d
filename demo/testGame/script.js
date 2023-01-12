@@ -1,6 +1,10 @@
 import { JaPNaAEngine2d } from "../../build/JaPNaAEngine2d.js";
 
-console.log(new JaPNaAEngine2d());
+console.log(new JaPNaAEngine2d({
+    canvasSize: {
+        width: 'auto', height: 'auto'
+    }
+}));
 
 // todo: test
 // EventBus

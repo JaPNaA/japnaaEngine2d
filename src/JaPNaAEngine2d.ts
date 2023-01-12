@@ -3,11 +3,11 @@ import { KeyboardInput } from "./KeyboardInput.js";
 import { MouseInput, MouseInputWithCollision, MouseInputWithoutCollision } from "./MouseInput.js";
 
 export class JaPNaAEngine2d {
-    public world: World;
-    public collider: Collider;
+    // public world: World;
+    // public collider: Collider;
     public keyboard: KeyboardInput; // keyboard mouse touch should only be enabled once used
     public mouse: MouseInput; // mouse.collisionType getter gives error if mouseInCollisionSystem is false
-    public touch: TouchInput;
+    // public touch: TouchInput;
     public canvas: Canvas;
 
     private options: Required<JaPNaAEngine2dOptions>;
@@ -25,7 +25,19 @@ export class JaPNaAEngine2d {
         }
 
         this.keyboard = new KeyboardInput();
-        this.canvas = new Canvas();
+        this.canvas = new Canvas(this.options.canvasSize === "auto" ? defaultCanvasSizeOptions : {
+            ...defaultCanvasSizeOptions,
+            ...this.options.canvasSize
+        });
+
+        if (this.options.parentElement === document.body) {
+            this.canvas.appendTo(this.options.parentElement);
+            const style = document.createElement("style");
+            style.innerHTML = "body { overflow: hidden; margin: 0; } canvas { position: absolute; }";
+            document.head.appendChild(style);
+        } else {
+            throw new Error("Unsupported");
+        }
     }
 }
 
@@ -77,7 +89,7 @@ export interface JaPNaAEngine2dOptions {
     /**
      * A parent element for the HTMLCanvas.
      * 
-     * If parentElement is document.body, the canvas will be appended directly to the body and a <style> will be appended to document.head.
+     * If parentElement is document.body, the canvas will be appended directly to the body and a \<style> will be appended to document.head.
      * 
      * If parentElement is anything other than document.body, the canvas will be wrapped in a \<div class='JaPNaAEngine2dWrapper'>.
      * 
