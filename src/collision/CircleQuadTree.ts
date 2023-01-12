@@ -1,4 +1,4 @@
-import { Vec2 } from "../geometry/Vec2";
+import { Vec2 } from "../geometry/Vec2.js";
 
 
 // --- quadtree circle collider

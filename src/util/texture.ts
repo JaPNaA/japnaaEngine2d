@@ -1,4 +1,4 @@
-import { Rectangle } from "../geometry/Rectangle.js";
+import { Rectangle } from "../geometry/Rectangle.js.js";
 
 class Texture extends Rectangle {
     public imageSrc: HTMLImageElement | HTMLCanvasElement;

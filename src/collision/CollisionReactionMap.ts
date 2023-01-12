@@ -1,4 +1,4 @@
-import { Collidable, Hitbox } from "./Hitbox";
+import { Collidable, Hitbox } from "./Hitbox.js";
 
 type ReactionFunction = (a: Hitbox<any>, b: Hitbox<any>) => void
 

@@ -1,4 +1,4 @@
-import { Component } from "./elements";
+import { Component } from "./elements.js";
 
 export class HTMLOverlay extends Component {
     constructor() {

@@ -1,4 +1,4 @@
-import { Rectangle } from "./Rectangle";
+import { Rectangle } from "./Rectangle.js";
 
 export class MovingRectangle extends Rectangle {
     public lastX: number;

@@ -1,4 +1,4 @@
-import { EventBus } from "./util/EventBus";
+import { EventBus } from "./util/EventBus.js";
 
 export abstract class MouseInput {
     public abstract readonly collisionType: Symbol;

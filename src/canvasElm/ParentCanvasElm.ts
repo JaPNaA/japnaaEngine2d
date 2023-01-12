@@ -1,7 +1,7 @@
-import { CanvasElm } from "./CanvasElm";
-import { removeElmFromArray } from "../util/removeElmFromArray";
-import { World } from "../World";
-import { CanvasElmWithEventBus } from "./CanvasElmWithEventBus";
+import { CanvasElm } from "./CanvasElm.js";
+import { removeElmFromArray } from "../util/removeElmFromArray.js";
+import { World } from "../World.js";
+import { CanvasElmWithEventBus } from "./CanvasElmWithEventBus.js";
 
 export class ParentCanvasElm extends CanvasElmWithEventBus {
     private children: CanvasElm[] = [];

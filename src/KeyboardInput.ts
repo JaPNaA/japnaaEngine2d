@@ -1,4 +1,4 @@
-import { EventBus } from "./util/EventBus";
+import { EventBus } from "./util/EventBus.js";
 
 export class KeyboardInput {
     private keys: { [x: string]: boolean } = {};

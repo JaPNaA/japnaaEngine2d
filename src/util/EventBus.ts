@@ -1,4 +1,4 @@
-import { removeElmFromArray } from "./removeElmFromArray";
+import { removeElmFromArray } from "./removeElmFromArray.js";
 
 type Handler<T> = (data: T) => void;
 

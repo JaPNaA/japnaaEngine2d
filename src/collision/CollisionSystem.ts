@@ -1,7 +1,7 @@
-import { Rectangle } from "../geometry/Rectangle";
-import { removeElmFromArray } from "../util/removeElmFromArray";
-import { CollisionReactionMap } from "./CollisionReactionMap";
-import { Hitbox } from "./Hitbox";
+import { Rectangle } from "../geometry/Rectangle.js";
+import { removeElmFromArray } from "../util/removeElmFromArray.js";
+import { CollisionReactionMap } from "./CollisionReactionMap.js";
+import { Hitbox } from "./Hitbox.js";
 
 export class CollisionSystem {
     public reactions = new CollisionReactionMap();

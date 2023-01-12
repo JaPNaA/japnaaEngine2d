@@ -1,7 +1,7 @@
-import Canvas from "./Canvas";
-import Camera from "./Camera";
-import IEntity from "./interfaces/IEntity";
-import CircleQuadTree from "./collision/CircleQuadTree";
+import Canvas from "./Canvas.js";
+import Camera from "./Camera.js";
+import IEntity from "./interfaces/IEntity.js";
+import CircleQuadTree from "./collision/CircleQuadTree.js";
 
 interface IEntity {
     radius: number;

@@ -1,6 +1,6 @@
-import { Canvas, CanvasSizeOptions } from "./Canvas";
-import { KeyboardInput } from "./KeyboardInput";
-import { MouseInput, MouseInputWithCollision, MouseInputWithoutCollision } from "./MouseInput";
+import { Canvas, CanvasSizeOptions } from "./Canvas.js";
+import { KeyboardInput } from "./KeyboardInput.js";
+import { MouseInput, MouseInputWithCollision, MouseInputWithoutCollision } from "./MouseInput.js";
 
 export class JaPNaAEngine2d {
     public world: World;

@@ -1,4 +1,4 @@
-import { Vec2 } from "./Vec2";
+import { Vec2 } from "./Vec2.js";
 
 export class Line {
     constructor(public start: Vec2, public end: Vec2) { }

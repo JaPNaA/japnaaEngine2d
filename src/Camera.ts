@@ -1,4 +1,4 @@
-import { Rectangle } from "./Rectangle";
+import { Rectangle } from "./Rectangle.js";
 
 class Camera {
     public rect = new Rectangle(0, 0, 1, 1);

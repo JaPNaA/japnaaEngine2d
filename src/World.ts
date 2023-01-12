@@ -1,12 +1,12 @@
-import { Camera } from "./Camera";
-import { Canvas } from "./Canvas";
-import { CanvasElm } from "./canvasElm/CanvasElm";
-import { CanvasElmWithEventBus } from "./canvasElm/CanvasElmWithEventBus";
-import { CollisionSystem } from "./collision/CollisionSystem";
-import { EventBus } from "./util/EventBus";
-import { HTMLOverlay } from "./HTMLOverlay";
-import { KeyboardInput } from "./KeyboardInput";
-import { MouseInput } from "./MouseInput";
+import { Camera } from "./Camera.js";
+import { Canvas } from "./Canvas.js";
+import { CanvasElm } from "./canvasElm/CanvasElm.js";
+import { CanvasElmWithEventBus } from "./canvasElm/CanvasElmWithEventBus.js";
+import { CollisionSystem } from "./collision/CollisionSystem.js";
+import { EventBus } from "./util/EventBus.js";
+import { HTMLOverlay } from "./HTMLOverlay.js";
+import { KeyboardInput } from "./KeyboardInput.js";
+import { MouseInput } from "./MouseInput.js";
 
 export class World {
     public canvas = new Canvas();

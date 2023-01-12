@@ -1,4 +1,4 @@
-import { World } from "../World";
+import { World } from "../World.js";
 
 export abstract class CanvasElm {
     protected world!: World;
