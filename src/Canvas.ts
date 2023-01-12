@@ -79,8 +79,9 @@ export class Canvas {
             newHeight = canvasBoundingBoxHeight;
             this.scaling = 1;
         } else if (this.options.sizingMethod === "scale") {
-            newWidth = canvasBoundingBoxWidth;
-            newHeight = canvasBoundingBoxHeight;
+            // 'scaleImage' keeps the original width / height options and uses the rendering context to zoom
+            newWidth = targetWidth;
+            newHeight = targetHeight;
             this.scaling = canvasBoundingBoxWidth / targetWidth;
         } else { // this.options.sizingMethod === "scaleImage"
             // 'scaleImage' keeps the original width / height options and uses CSS to size the canvas instead
@@ -94,8 +95,8 @@ export class Canvas {
             this.scaling *= dpiScaling;
             this.width = newWidth;
             this.height = newHeight;
-            this.canvas.width = this.actualWidth = dpiScaling * newWidth;
-            this.canvas.height = this.actualHeight = dpiScaling * newHeight;
+            this.canvas.width = this.actualWidth = Math.round(this.scaling * newWidth);
+            this.canvas.height = this.actualHeight = Math.round(this.scaling * newHeight);
             this.X.scale(this.scaling, this.scaling);
         } else { // ['none', 'oneToOne'].includes(this.options.this.dprScaling)
             // 'none' does nothing here because dpiScaling is set to 1 earlier
@@ -119,6 +120,8 @@ export class Canvas {
 
         this.lastConstraintWidth = innerWidth;
         this.lastConstraintHeight = innerHeight;
+
+        console.log(this.width, this.height);
     }
 
     /**
