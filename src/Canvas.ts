@@ -31,6 +31,15 @@ export class Canvas {
      */
     public scaling = 1;
 
+    private lastConstraintWidth = 0;
+    private lastConstraintHeight = 0;
+
+    /**
+     * If waiting for a resize event (iOS)
+     */
+    private waitingForResize = false;
+    private resizeAnimationFrameRequestId = 0;
+
     constructor(private options: Required<CanvasSizeOptions>) {
         if (!this.X) { alert("Browser not supported"); throw new Error("Browser not supported: cannot get canvas context"); }
 
@@ -107,6 +116,9 @@ export class Canvas {
         this.canvas.style.height = canvasBoundingBoxHeight + "px";
         this.canvas.style.left = this.offsetX + "px";
         this.canvas.style.top = this.offsetY + "px";
+
+        this.lastConstraintWidth = innerWidth;
+        this.lastConstraintHeight = innerHeight;
     }
 
     /**
@@ -147,87 +159,22 @@ export class Canvas {
     }
 
     private resizeHandler() {
-        if (this.options.autoResize) {
+        if (!this.options.autoResize) { return; }
+        if (innerWidth === this.lastConstraintWidth && innerHeight == this.lastConstraintHeight) {
+            // Wait for resize to happen (on iOS)
+            if (this.waitingForResize) { return; }
+            this.waitingForResize = true;
+            this.resizeAnimationFrameRequestId = requestAnimationFrame(() => {
+                this.waitingForResize = false;
+                this.resizeHandler();
+            });
+        } else {
+            this.waitingForResize = false;
+            cancelAnimationFrame(this.resizeAnimationFrameRequestId);
             this.resizeBasedOnScreen();
         }
     }
 }
-
-// class Canvas2 {
-//     private canvas: HTMLCanvasElement;
-
-//     constructor(o: { width: number, height: number }) {
-//         this.canvas = document.createElement("canvas");
-//         this.canvas.classList.add("JaPNaA");
-//         this.canvas.width = o.width;
-//         this.canvas.height = o.height;
-
-//         addEventListener("resize", this.resizeHandler.bind(this));
-//         this.resizeHandler();
-//     }
-
-//     public appendTo(parent: HTMLElement) {
-//         parent.appendChild(this.canvas);
-//     }
-
-//     private resizeHandler() {
-//     }
-//     resize() {
-//         if (this.resizing || !this.started && this.lastSize.has) return;
-//         var dpr = window.devicePixelRatio || 1,
-//             w = window.innerWidth,
-//             h = window.innerHeight;
-
-//         if (w == this.lastSize.w && h == this.lastSize.h && this.lastSize.has) {
-//             this.resizing = true;
-//             this.resizeLoop();
-//             return;
-//         }
-
-//         if (h * this.ratio < w) {
-//             this.canvas.classList.remove("h");
-//             document.body.classList.remove("h");
-
-//             this.canvas.width = h * this.ratio * dpr;
-//             this.canvas.height = h * dpr;
-
-//             this.offsetX = (w - this.canvas.width / dpr) / 2;
-//             this.canvas.style.left = this.offsetX + "px";
-
-//             this.offsetY = 0;
-//             this.canvas.style.top = 0;
-//         } else {
-//             this.canvas.classList.add("h");
-//             document.body.classList.add("h");
-
-//             this.canvas.width = w * dpr;
-//             this.canvas.height = w / this.ratio * dpr;
-
-//             this.offsetX = 0;
-//             this.canvas.style.left = 0;
-
-//             this.offsetY = (h - this.canvas.height / dpr) / 2;
-//             this.canvas.style.top = this.offsetY + "px";
-//         }
-
-//         this.lastSize.w = window.innerWidth;
-//         this.lastSize.h = window.innerHeight;
-//         this.lastSize.has = true;
-
-//         this.X.resetTransform();
-//         this.scaleX = this.canvas.width / this.width;
-//         this.scaleY = this.canvas.height / this.height;
-//         this.X.scale(this.scaleX, this.scaleY);
-//     }
-//     resizeLoop() { // because ios is bad
-//         if (window.innerWidth == this.lastSize.w && window.innerHeight == this.lastSize.h) {
-//             requestAnimationFrame(() => this.resizeLoop());
-//         } else {
-//             this.resizing = false;
-//             this.resize();
-//         }
-//     }
-// }
 
 
 export interface CanvasSizeOptions {
