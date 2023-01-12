@@ -27,49 +27,74 @@ export class Canvas {
      */
     public actualHeight = 0;
     /**
-     * The canvas's scaling.
+     * The canvas's scaling. (width * scaling = actualWidth)
      */
-    public scaling = 0;
+    public scaling = 1;
 
     constructor(private options: Required<CanvasSizeOptions>) {
         if (!this.X) { alert("Browser not supported"); throw new Error("Browser not supported: cannot get canvas context"); }
 
         this.resizeHandler = this.resizeHandler.bind(this);
         addEventListener("resize", this.resizeHandler);
-        this.resizeHandler();
+        this.resizeBasedOnScreen();
     }
 
+    /**
+     * Resizes the canvas based on the supplied CanvasSizeOptions and current innerWidth/innerHeight
+     */
     public resizeBasedOnScreen() {
-        const targetWidth = this.options.width === "auto" ? innerWidth : this.options.width;
-        const targetHeight = this.options.height === "auto" ? innerHeight : this.options.height;
-        const [canvasBoundingBoxWidth, canvasBoundingBoxHeight] = this.determineTargetCanvasBoundingBox(targetWidth, targetHeight);
-        this.scaling = this.options.dpr === "none" ? 1 : window.devicePixelRatio || 1;
+        let targetWidth = this.options.width === "auto" ? innerWidth : this.options.width;
+        let targetHeight = this.options.height === "auto" ? innerHeight : this.options.height;
+        let [canvasBoundingBoxWidth, canvasBoundingBoxHeight] = this.determineTargetCanvasBoundingBox(targetWidth, targetHeight);
+        const dpiScaling = this.options.dpr === "none" ? 1 : window.devicePixelRatio || 1;
 
+        // Re-auto-sizing. If the width or height is auto, we resize the bounding box to ensure
+        // it covers the full width/height. (The first bounding box may be shrinked to not fill the
+        // full width/height)
+        if (this.options.width === "auto") {
+            canvasBoundingBoxWidth = targetWidth;
+            targetWidth *= targetHeight / canvasBoundingBoxHeight; // increase targetWidth to fill entire width
+        }
+        if (this.options.height === "auto") {
+            canvasBoundingBoxHeight = targetHeight;
+            targetHeight *= targetWidth / canvasBoundingBoxWidth; // increase targetHeight to fill entire height
+        }
+
+        // Setting new canvas size.
         let newWidth;
         let newHeight;
+
+        // 'resize' and 'scale' both match the found bounding box
         if (this.options.sizingMethod === "resize") {
             newWidth = canvasBoundingBoxWidth;
             newHeight = canvasBoundingBoxHeight;
+            this.scaling = 1;
         } else if (this.options.sizingMethod === "scale") {
             newWidth = canvasBoundingBoxWidth;
             newHeight = canvasBoundingBoxHeight;
-            this.scaling *= canvasBoundingBoxWidth / targetWidth;
+            this.scaling = canvasBoundingBoxWidth / targetWidth;
         } else { // this.options.sizingMethod === "scaleImage"
+            // 'scaleImage' keeps the original width / height options and uses CSS to size the canvas instead
             newWidth = targetWidth;
             newHeight = targetHeight;
+            this.scaling = 1;
         }
 
+        // Dealing with dpr != 1.
         if (this.options.dpr === "scale") {
+            this.scaling *= dpiScaling;
             this.width = newWidth;
             this.height = newHeight;
-            this.canvas.width = this.actualWidth = this.scaling * newWidth;
-            this.canvas.height = this.actualHeight = this.scaling * newHeight;
+            this.canvas.width = this.actualWidth = dpiScaling * newWidth;
+            this.canvas.height = this.actualHeight = dpiScaling * newHeight;
             this.X.scale(this.scaling, this.scaling);
         } else { // ['none', 'oneToOne'].includes(this.options.this.dprScaling)
-            this.canvas.width = this.actualWidth = this.width = this.scaling * newWidth;
-            this.canvas.height = this.actualHeight = this.height = this.scaling * newHeight;
+            // 'none' does nothing here because dpiScaling is set to 1 earlier
+            this.canvas.width = this.actualWidth = this.width = dpiScaling * newWidth;
+            this.canvas.height = this.actualHeight = this.height = dpiScaling * newHeight;
         }
 
+        // Centering the canvas.
         if (this.options.centering) {
             this.offsetX = (innerWidth - canvasBoundingBoxWidth) / 2;
             this.offsetY = (innerHeight - canvasBoundingBoxHeight) / 2;
@@ -77,12 +102,16 @@ export class Canvas {
             this.offsetX = this.offsetY = 0;
         }
 
+        // Apply CSS styles.
         this.canvas.style.width = canvasBoundingBoxWidth + "px";
         this.canvas.style.height = canvasBoundingBoxHeight + "px";
         this.canvas.style.left = this.offsetX + "px";
         this.canvas.style.top = this.offsetY + "px";
     }
 
+    /**
+     * Finds a width and height of a canvas size that fulfills requirements while preserving aspect ratio.
+     */
     private determineTargetCanvasBoundingBox(targetWidth: number, targetHeight: number): [number, number] {
         const targetWidthHeightRatio = targetWidth / targetHeight;
         const screenWidthHeightRatio = innerWidth / innerHeight;
@@ -91,18 +120,18 @@ export class Canvas {
         if (this.options.sizing === "fit") {
             if (targetWidthHeightRatio < screenWidthHeightRatio) {
                 // width is limiting
-                return [innerHeight * targetWidthHeightRatio, innerHeight];
+                return [Math.round(innerHeight * targetWidthHeightRatio), innerHeight];
             } else {
                 // height is limiting
-                return [innerWidth, innerWidth / targetWidthHeightRatio];
+                return [innerWidth, Math.round(innerWidth / targetWidthHeightRatio)];
             }
         } else if (this.options.sizing === "cover") {
             if (targetWidthHeightRatio < screenWidthHeightRatio) {
                 // width is smaller
-                return [innerWidth, innerWidth / targetWidthHeightRatio];
+                return [innerWidth, Math.round(innerWidth / targetWidthHeightRatio)];
             } else {
                 // height is bigger
-                return [innerHeight * targetWidthHeightRatio, innerHeight];
+                return [Math.round(innerHeight * targetWidthHeightRatio), innerHeight];
             }
         } else { // this.options.sizing === "none"
             return [targetWidth, targetHeight];
@@ -205,7 +234,7 @@ export interface CanvasSizeOptions {
     /**
      * Width of the canvas.
      * 
-     * 'auto' corresponds to innerWidth.
+     * 'auto' usually corresponds to innerWidth.
      * 
      * default: 'auto'
      */
@@ -214,7 +243,7 @@ export interface CanvasSizeOptions {
     /**
      * Height of the canvas.
      * 
-     * 'auto' corresponds to innerHeight
+     * 'auto' usually corresponds to innerHeight
      * 
      * default: 'auto'
      */
@@ -253,7 +282,7 @@ export interface CanvasSizeOptions {
     /**
      * Controls the method to resize the canvas
      *   - 'resize' - Changes the canvas's width and height, retaining aspect ratio
-     *   - 'scale' - Scales the canvas without changing width and height
+     *   - 'scale' - Scales the canvas without changing (percieved) width and height
      *   - 'scaleImage' - Enlarges rendered canvas image without changing width and height
      * 
      * If width and height are 'auto', then this option has no effect.
@@ -265,8 +294,8 @@ export interface CanvasSizeOptions {
 
     /**
      * Controls how the canvas responds to the devicePixelRatio
-     *   - 'none' - No effect (width = targetWidth; height = targetHeight)
-     *   - 'scale' - Scales up the canvas (actualWidth = targetWidth * dpr; actualHeight = targetHeight * dpr; renderingContext.scale(dpr, dpr); width = targetWidth; height = targetHeight)
+     *   - 'none' - Don't respond to devicePixelRatio (width = targetWidth; height = targetHeight)
+     *   - 'scale' - Scales up the canvas without changing (percieved) width and height
      *      - Your app will still the the canvas size uneffected by devicePixelRatio, but the rendering will be done on a larger canvas
      *   - 'oneToOne' - (width = targetWidth * dpr; height = targetHeight * dpr)
      *      - The canvas will retain a one-to-one ratio with the screen's pixels.
