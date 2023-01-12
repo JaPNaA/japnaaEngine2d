@@ -52,6 +52,10 @@ export class Canvas {
      * Resizes the canvas based on the supplied CanvasSizeOptions and current innerWidth/innerHeight
      */
     public resizeBasedOnScreen() {
+        // ! incorrect behaviour -- when only one of [width, height] is 'auto', and the other is fixed,
+        // and sizing is not 'none', the canvas doesn't become larger than the specified width or height.
+        // The correct behaviour with the above settings should ensure the entire window is covered.
+        // and { sizing: 'fit' and 'auto' } should behave the same.
         let targetWidth = this.options.width === "auto" ? innerWidth : this.options.width;
         let targetHeight = this.options.height === "auto" ? innerHeight : this.options.height;
         let [canvasBoundingBoxWidth, canvasBoundingBoxHeight] = this.determineTargetCanvasBoundingBox(targetWidth, targetHeight);
