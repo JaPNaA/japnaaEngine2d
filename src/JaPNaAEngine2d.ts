@@ -36,7 +36,7 @@ export class JaPNaAEngine2d {
             style.innerHTML = "body { overflow: hidden; margin: 0; } canvas { position: absolute; }";
             document.head.appendChild(style);
         } else {
-            throw new Error("Unsupported");
+            throw new Error("Not implemented");
         }
     }
 }

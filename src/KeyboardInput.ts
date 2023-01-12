@@ -7,25 +7,37 @@ export class KeyboardInput {
     constructor() {
         this.keyupHandler = this.keyupHandler.bind(this);
         this.keydownHandler = this.keydownHandler.bind(this);
-        console.log(this.keys);
-    }
-
-    public _startListen() {
         addEventListener("keyup", this.keyupHandler);
         addEventListener("keydown", this.keydownHandler);
     }
 
-    public _stopListen() {
+    public _dispose() {
         removeEventListener("keyup", this.keyupHandler);
         removeEventListener("keydown", this.keydownHandler);
     }
 
+    /**
+     * Get or create an event bus that sends messages when the specified key(s) are pressed
+     * @param key the key(s) you want an event bus for
+     */
     public getKeydownBus(key: string | string[]): EventBus<KeyboardEvent> {
         if (Array.isArray(key)) {
             return this.getOrCreateSuperkeyKeydownBus(key);
         } else {
             return this.getOrCreateKeydownBus(key);
         }
+    }
+
+    /**
+     * Checks if a key is being held down.
+     * 
+     * If multiple keys are supplied, returns true of any of the specified keys are pressed.
+     */
+    public isDown(keyCodes: string[]) {
+        for (const code of keyCodes) {
+            if (this.keys[code]) { return true; }
+        }
+        return false;
     }
 
     private getOrCreateSuperkeyKeydownBus(keys: string[]) {
@@ -52,13 +64,6 @@ export class KeyboardInput {
             this.eventBusses[key] = newBus;
             return newBus;
         }
-    }
-
-    public isDown(keyCodes: string[]) {
-        for (const code of keyCodes) {
-            if (this.keys[code]) { return true; }
-        }
-        return false;
     }
 
     private keyupHandler(event: KeyboardEvent) {

@@ -41,6 +41,24 @@ function requanf() {
     requestAnimationFrame(requanf);
 }
 
+function resetX() {
+    x = 50;
+}
+
+function resetY() {
+    y = 50;
+}
+
+function resetKeybinds() {
+    engine.keyboard.getKeydownBus(["Space", "KeyQ"]).unsubscribe(resetX);
+    engine.keyboard.getKeydownBus(["Space", "KeyE"]).unsubscribe(resetY);
+    engine.keyboard.getKeydownBus(["Escape", "KeyC"]).unsubscribe(resetKeybinds);
+}
+
+engine.keyboard.getKeydownBus(["Space", "KeyQ"]).subscribe(resetX);
+engine.keyboard.getKeydownBus(["Space", "KeyE"]).subscribe(resetY);
+engine.keyboard.getKeydownBus(["Escape", "KeyC"]).subscribe(resetKeybinds);
+
 requanf();
 
 console.log(engine);
@@ -48,4 +66,3 @@ console.log(engine);
 // todo: test
 // EventBus
 // MouseInput (with and without collision)
-// KeyboardInput (superbus: especially subscribing and unsubscribing)
