@@ -1,6 +1,9 @@
 import { Vec2, Vec2M } from "./geometry/Vec2.js";
+import { EventBus } from "./util/EventBus.js";
 
 export class CanvasSizer {
+    public onResize: EventBus = new EventBus();
+
     /**
      * Width of the canvas (before scaling); the width the application should use
      */
@@ -42,8 +45,25 @@ export class CanvasSizer {
 
     private constraintWidth = 0;
     private constraintHeight = 0;
+    private lastConstraintWidth = 0;
+    private lastConstraintHeight = 0;
 
-    constructor(private options: Required<CanvasSizeOptions>) { }
+    /**
+     * If waiting for a resize event (iOS)
+     */
+    private waitingForResize = false;
+    private resizeAnimationFrameRequestId = 0;
+
+
+    constructor(private options: Required<CanvasSizeOptions>) {
+        this.resizeHandler = this.resizeHandler.bind(this);
+        addEventListener("resize", this.resizeHandler);
+        this.resizeOnConstraints(innerWidth, innerHeight);
+    }
+
+    public _dispose() {
+        removeEventListener("resize", this.resizeHandler);
+    }
 
     /**
      * Resizes the canvas based on the supplied CanvasSizeOptions and current constraintWidth/Height
@@ -104,6 +124,11 @@ export class CanvasSizer {
         this.height = newHeight;
         this.actualWidth = Math.round(this.scaling * newWidth);
         this.actualHeight = Math.round(this.scaling * newHeight);
+
+        this.lastConstraintWidth = innerWidth;
+        this.lastConstraintHeight = innerHeight;
+
+        this.onResize.send();
     }
 
     public screenPosToCanvasPos(screenPos: Vec2): Vec2 {
@@ -130,6 +155,23 @@ export class CanvasSizer {
             return 1;
         }
     }
+
+    private resizeHandler() {
+        if (!this.options.autoResize) { return; }
+        if (innerWidth === this.lastConstraintWidth && innerHeight == this.lastConstraintHeight) {
+            // Wait for resize to happen (on iOS)
+            if (this.waitingForResize) { return; }
+            this.waitingForResize = true;
+            this.resizeAnimationFrameRequestId = requestAnimationFrame(() => {
+                this.waitingForResize = false;
+                this.resizeHandler();
+            });
+        } else {
+            this.waitingForResize = false;
+            cancelAnimationFrame(this.resizeAnimationFrameRequestId);
+            this.resizeOnConstraints(innerWidth, innerHeight);
+        }
+    }
 }
 
 export interface CanvasSizeOptions {
@@ -150,6 +192,13 @@ export interface CanvasSizeOptions {
      * default: 'auto'
      */
     height?: number | 'auto';
+
+    /**
+     * Controls if the canvas will automatically resize when the user resizes the window
+     * 
+     * default: true
+     */
+    autoResize?: boolean;
 
     /**
      * Controls if the canvas should be aligned at the center of the window.

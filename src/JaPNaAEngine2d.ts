@@ -11,6 +11,7 @@ export class JaPNaAEngine2d {
     public mouse: MouseInput; // mouse.collisionType getter gives error if mouseInCollisionSystem is false
     // public touch: TouchInput;
     public canvas: Canvas;
+    public sizer: CanvasSizer;
     public htmlOverlay: HTMLOverlay;
 
     private options: Required<JaPNaAEngine2dOptions>;
@@ -28,15 +29,16 @@ export class JaPNaAEngine2d {
         }
 
         this.keyboard = new KeyboardInput();
+
+        this.sizer = new CanvasSizer({
+                ...defaultCanvasSizeOptions,
+            ...this.options.sizing
+        });
+
         this.canvas = new Canvas({
             ...defaultCanvasOptions,
-            ...this.options.canvas,
-            sizing: {
-                ...defaultCanvasSizeOptions,
-                ...this.options.canvas.sizing
-            }
-        });
-        this.htmlOverlay = new HTMLOverlay();
+            ...this.options.canvas
+        }, this.sizer);
 
         if (this.options.parentElement === document.body) {
             this.canvas.appendTo(this.options.parentElement);
@@ -57,6 +59,7 @@ export class JaPNaAEngine2d {
 const defaultCanvasSizeOptions: Required<CanvasSizeOptions> = {
     width: 'auto',
     height: 'auto',
+    autoResize: true,
     centering: true,
     sizingMethod: 'scale',
     sizing: 'fit',
@@ -77,6 +80,7 @@ const defaultCanvasOptions: Required<CanvasOptions> = {
  */
 const defaultJaPNaAEngineOptions: Required<JaPNaAEngine2dOptions> = {
     canvas: defaultCanvasOptions,
+    sizing: defaultCanvasSizeOptions,
     collision: 'sortedAuto',
     parentElement: document.body,
     touchInputAsMouseInput: true,
@@ -92,6 +96,12 @@ export interface JaPNaAEngine2dOptions {
      */
     canvas?: CanvasOptions;
 
+    /**
+     * How the Canvas should be positioned on the screen and in world space.
+     * 
+     * By default, the canvas will cover the entire screen and respond to devicePixelRatio.
+     */
+    sizing?: CanvasSizeOptions;
     /**
      * Selects the system to use for collision detection.
      * 

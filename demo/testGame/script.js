@@ -1,13 +1,11 @@
-import { JaPNaAEngine2d } from "../../build/JaPNaAEngine2d.js";
+import { Elm, JaPNaAEngine2d } from "../../build/JaPNaAEngine2d.js";
 
 const engine = new JaPNaAEngine2d({
-    canvas: {
-        sizing: {
-            width: 1280, height: 720,
-            sizingMethod: "resize",
-            sizing: 'fit',
-            dpr: 'oneToOne'
-        }
+    sizing: {
+        width: 1280, height: 720,
+        sizingMethod: "scale",
+        sizing: 'fit',
+        dpr: 'oneToOne'
     }
 });
 
@@ -71,8 +69,13 @@ function resetKeybinds() {
 engine.keyboard.getKeydownBus(["Space", "KeyQ"]).subscribe(resetX);
 engine.keyboard.getKeydownBus(["Space", "KeyE"]).subscribe(resetY);
 engine.keyboard.getKeydownBus(["Escape", "KeyC"]).subscribe(resetKeybinds);
-engine.mouse.mouseup.subscribe(resetX);
-engine.mouse.mousemove.subscribe(resetY);
+engine.mouse.onMouseup.subscribe(resetX);
+engine.mouse.onMousemove.subscribe(resetY);
+
+engine.htmlOverlay.elm.append(
+    new Elm().append("Text sticking on the canvas!")
+        .attribute("style", "color: red;")
+);
 
 requanf();
 
