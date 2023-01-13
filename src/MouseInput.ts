@@ -1,11 +1,11 @@
+import { Vec2M } from "./geometry/Vec2.js";
 import { EventBus } from "./util/EventBus.js";
 
 export abstract class MouseInput {
     public abstract readonly collisionType: Symbol;
     public leftDown = false;
     public rightDown = false;
-    public x = 0;
-    public y = 0;
+    public screenPos: Vec2M = new Vec2M(0, 0);
 
     public mouseup = new EventBus<MouseEvent>();
     public mousedown = new EventBus<MouseEvent>();
@@ -16,16 +16,14 @@ export abstract class MouseInput {
         this.mousedownHandler = this.mousedownHandler.bind(this);
         this.mousemoveHandler = this.mousemoveHandler.bind(this);
         this.contextmenuHandler = this.contextmenuHandler.bind(this);
-    }
 
-    public _startListen() {
         addEventListener("mouseup", this.mouseupHandler);
         addEventListener("mousedown", this.mousedownHandler);
         addEventListener("mousemove", this.mousemoveHandler);
         addEventListener("contextmenu", this.contextmenuHandler);
     }
 
-    public _stopListen() {
+    public _dispose() {
         removeEventListener("mouseup", this.mouseupHandler);
         removeEventListener("mousedown", this.mousedownHandler);
         removeEventListener("mousemove", this.mousemoveHandler);
@@ -51,8 +49,8 @@ export abstract class MouseInput {
     }
 
     private mousemoveHandler(event: MouseEvent) {
-        this.x = event.clientX;
-        this.y = event.clientY;
+        this.screenPos.x = event.clientX;
+        this.screenPos.y = event.clientY;
         this.mousemove.send(event);
     }
 

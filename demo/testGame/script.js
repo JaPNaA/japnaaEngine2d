@@ -13,18 +13,6 @@ let x = 50;
 let y = 50;
 
 function requanf() {
-    const X = engine.canvas.X;
-    X.fillStyle = "#000";
-    X.strokeStyle = "#f00";
-    X.lineWidth = 4;
-    X.beginPath();
-    X.rect(0, 0, engine.canvas.width, engine.canvas.height);
-    X.fill();
-    X.stroke();
-
-    X.fillStyle = "#fff";
-    X.fillRect(x, y, 50, 50);
-
     let vx = 0, vy = 0;
     if (engine.keyboard.isDown(['ArrowUp', 'KeyW'])) {
         vy--;
@@ -41,6 +29,24 @@ function requanf() {
     if (vx && vy) { vx *= Math.SQRT1_2; vy *= Math.SQRT1_2; }
     x += vx * 2;
     y += vy * 2;
+
+    if (engine.mouse.leftDown) {
+        const canvasPos = engine.canvas.screenPosToCanvasPos(engine.mouse.screenPos);
+        x = canvasPos.x;
+        y = canvasPos.y;
+    }
+
+    const X = engine.canvas.X;
+    X.fillStyle = "#000";
+    X.strokeStyle = "#f00";
+    X.lineWidth = 4;
+    X.beginPath();
+    X.rect(0, 0, engine.canvas.width, engine.canvas.height);
+    X.fill();
+    X.stroke();
+
+    X.fillStyle = "#fff";
+    X.fillRect(x, y, 50, 50);
 
     requestAnimationFrame(requanf);
 }
@@ -62,11 +68,12 @@ function resetKeybinds() {
 engine.keyboard.getKeydownBus(["Space", "KeyQ"]).subscribe(resetX);
 engine.keyboard.getKeydownBus(["Space", "KeyE"]).subscribe(resetY);
 engine.keyboard.getKeydownBus(["Escape", "KeyC"]).subscribe(resetKeybinds);
+engine.mouse.mouseup.subscribe(resetX);
+engine.mouse.mousemove.subscribe(resetY);
 
 requanf();
 
 console.log(engine);
 
 // todo: test
-// EventBus
 // MouseInput (with and without collision)
