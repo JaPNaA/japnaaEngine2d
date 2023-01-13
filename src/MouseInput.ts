@@ -7,9 +7,9 @@ export abstract class MouseInput {
     public rightDown = false;
     public screenPos: Vec2M = new Vec2M(0, 0);
 
-    public mouseup = new EventBus<MouseEvent>();
-    public mousedown = new EventBus<MouseEvent>();
-    public mousemove = new EventBus<MouseEvent>();
+    public onMouseup = new EventBus<MouseEvent>();
+    public onMousedown = new EventBus<MouseEvent>();
+    public onMousemove = new EventBus<MouseEvent>();
 
     constructor() {
         this.mouseupHandler = this.mouseupHandler.bind(this);
@@ -36,7 +36,7 @@ export abstract class MouseInput {
         } else if (event.button === 2) {
             this.rightDown = false;
         }
-        this.mouseup.send(event);
+        this.onMouseup.send(event);
     }
 
     private mousedownHandler(event: MouseEvent) {
@@ -45,13 +45,13 @@ export abstract class MouseInput {
         } else {
             this.rightDown = true;
         }
-        this.mousedown.send(event);
+        this.onMousedown.send(event);
     }
 
     private mousemoveHandler(event: MouseEvent) {
         this.screenPos.x = event.clientX;
         this.screenPos.y = event.clientY;
-        this.mousemove.send(event);
+        this.onMousemove.send(event);
     }
 
     private contextmenuHandler(event: Event) {

@@ -1,6 +1,7 @@
 import { Canvas, CanvasOptions } from "./Canvas.js";
-import { CanvasSizeOptions } from "./CanvasSizer.js";
-import { HTMLOverlay } from "./HTMLOverlay.js";
+import { CanvasSizeOptions, CanvasSizer } from "./CanvasSizer.js";
+import { Component, Elm, InputElm } from "./elements.js";
+import { HTMLOverlay, HTMLOverlayOptions } from "./HTMLOverlay.js";
 import { KeyboardInput } from "./KeyboardInput.js";
 import { MouseInput, MouseInputWithCollision, MouseInputWithoutCollision } from "./MouseInput.js";
 
@@ -31,7 +32,7 @@ export class JaPNaAEngine2d {
         this.keyboard = new KeyboardInput();
 
         this.sizer = new CanvasSizer({
-                ...defaultCanvasSizeOptions,
+            ...defaultCanvasSizeOptions,
             ...this.options.sizing
         });
 
@@ -40,10 +41,16 @@ export class JaPNaAEngine2d {
             ...this.options.canvas
         }, this.sizer);
 
+        this.htmlOverlay = new HTMLOverlay({
+            ...defaultHTMLOverlayOptions,
+            ...this.options.htmlOverlay
+        }, this.sizer);
+
         if (this.options.parentElement === document.body) {
             this.canvas.appendTo(this.options.parentElement);
+            this.htmlOverlay.appendTo(this.options.parentElement);
             const style = document.createElement("style");
-            style.innerHTML = "body { overflow: hidden; margin: 0; } canvas { position: absolute; }";
+            style.innerHTML = "body { overflow: hidden; margin: 0; } canvas, .HTMLOverlay { position: absolute; }";
             document.head.appendChild(style);
         } else {
             throw new Error("Not implemented");
@@ -52,6 +59,9 @@ export class JaPNaAEngine2d {
         // this.world = new World();
     }
 }
+
+// include elements.ts exports
+export { Elm, InputElm, Component };
 
 /**
  * Default CanvasSizeOptions
@@ -70,9 +80,15 @@ const defaultCanvasSizeOptions: Required<CanvasSizeOptions> = {
  * Default CanvasSizeOptions
  */
 const defaultCanvasOptions: Required<CanvasOptions> = {
-    autoResize: true,
-    alpha: false,
-    sizing: defaultCanvasSizeOptions
+    alpha: false
+};
+
+/**
+ * Default HTMLOverlayOptions
+ */
+const defaultHTMLOverlayOptions: Required<HTMLOverlayOptions> = {
+    scale: true,
+    stick: true
 };
 
 /**
@@ -81,6 +97,7 @@ const defaultCanvasOptions: Required<CanvasOptions> = {
 const defaultJaPNaAEngineOptions: Required<JaPNaAEngine2dOptions> = {
     canvas: defaultCanvasOptions,
     sizing: defaultCanvasSizeOptions,
+    htmlOverlay: defaultHTMLOverlayOptions,
     collision: 'sortedAuto',
     parentElement: document.body,
     touchInputAsMouseInput: true,
@@ -89,12 +106,18 @@ const defaultJaPNaAEngineOptions: Required<JaPNaAEngine2dOptions> = {
 
 export interface JaPNaAEngine2dOptions {
     /**
-     * Controls the canvas size.
+     * Controls the canvas options. (Change sizing options in `sizing`).
      * 
-     * By default, the canvas will have no transparency, cover the entire screen, and
-     * respond to the devicePixelRatio.
+     * By default, the canvas will have no transparency.
      */
     canvas?: CanvasOptions;
+
+    /**
+     * Controls HTMLOverlay options.
+     * 
+     * By default, the htmlOverlay will scale and 'stick' to the canvas.
+     */
+    htmlOverlay?: HTMLOverlayOptions;
 
     /**
      * How the Canvas should be positioned on the screen and in world space.
@@ -102,6 +125,7 @@ export interface JaPNaAEngine2dOptions {
      * By default, the canvas will cover the entire screen and respond to devicePixelRatio.
      */
     sizing?: CanvasSizeOptions;
+
     /**
      * Selects the system to use for collision detection.
      * 
