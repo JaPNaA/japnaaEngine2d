@@ -1,10 +1,13 @@
 import { JaPNaAEngine2d } from "../../build/JaPNaAEngine2d.js";
 
 const engine = new JaPNaAEngine2d({
-    canvasSize: {
-        width: 200, height: 400,
-        sizingMethod: "scale",
-        sizing: 'fit'
+    canvas: {
+        sizing: {
+            width: 1280, height: 720,
+            sizingMethod: "resize",
+            sizing: 'fit',
+            dpr: 'oneToOne'
+        }
     }
 });
 

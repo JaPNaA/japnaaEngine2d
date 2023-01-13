@@ -25,9 +25,13 @@ export class JaPNaAEngine2d {
         }
 
         this.keyboard = new KeyboardInput();
-        this.canvas = new Canvas(this.options.canvasSize === "auto" ? defaultCanvasSizeOptions : {
+        this.canvas = new Canvas({
+            ...defaultCanvasOptions,
+            ...this.options.canvas,
+            sizing: {
             ...defaultCanvasSizeOptions,
-            ...this.options.canvasSize
+                ...this.options.canvas.sizing
+            }
         });
 
         if (this.options.parentElement === document.body) {
@@ -58,20 +62,40 @@ const defaultJaPNaAEngineOptions: Required<JaPNaAEngine2dOptions> = {
 const defaultCanvasSizeOptions: Required<CanvasSizeOptions> = {
     width: 'auto',
     height: 'auto',
-    autoResize: true,
     centering: true,
     sizingMethod: 'scale',
     sizing: 'fit',
     dpr: 'scale'
 };
 
+/**
+ * Default CanvasSizeOptions
+ */
+const defaultCanvasOptions: Required<CanvasOptions> = {
+    autoResize: true,
+    alpha: false,
+    sizing: defaultCanvasSizeOptions
+};
+
+/**
+ * Default JaPNaAEngine2dOptions
+ */
+const defaultJaPNaAEngineOptions: Required<JaPNaAEngine2dOptions> = {
+    canvas: defaultCanvasOptions,
+    collision: 'sortedAuto',
+    parentElement: document.body,
+    touchInputAsMouseInput: true,
+    mouseInCollisionSystem: true
+};
+
 export interface JaPNaAEngine2dOptions {
     /**
      * Controls the canvas size.
      * 
-     * The default 'auto' will cover the screen, matching the window's aspect ratio.
+     * By default, the canvas will have no transparency, cover the entire screen, and
+     * respond to the devicePixelRatio.
      */
-    canvasSize?: 'auto' | CanvasSizeOptions;
+    canvas?: CanvasOptions;
 
     /**
      * Selects the system to use for collision detection.
