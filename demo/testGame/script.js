@@ -2,9 +2,9 @@ import { JaPNaAEngine2d } from "../../build/JaPNaAEngine2d.js";
 
 const engine = new JaPNaAEngine2d({
     canvasSize: {
-        width: "auto", height: 600,
+        width: 200, height: 400,
         sizingMethod: "scale",
-        sizing: "fit"
+        sizing: 'fit'
     }
 });
 
@@ -25,18 +25,22 @@ function requanf() {
     X.fillStyle = "#fff";
     X.fillRect(x, y, 50, 50);
 
+    let vx = 0, vy = 0;
     if (engine.keyboard.isDown(['ArrowUp', 'KeyW'])) {
-        y--;
+        vy--;
     }
     if (engine.keyboard.isDown(['ArrowDown', 'KeyS'])) {
-        y++;
+        vy++;
     }
     if (engine.keyboard.isDown(['ArrowLeft', 'KeyA'])) {
-        x--;
+        vx--;
     }
     if (engine.keyboard.isDown(['ArrowRight', 'KeyD'])) {
-        x++;
+        vx++;
     }
+    if (vx && vy) { vx *= Math.SQRT1_2; vy *= Math.SQRT1_2; }
+    x += vx * 2;
+    y += vy * 2;
 
     requestAnimationFrame(requanf);
 }

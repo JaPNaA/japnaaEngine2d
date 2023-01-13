@@ -52,26 +52,11 @@ export class Canvas {
      * Resizes the canvas based on the supplied CanvasSizeOptions and current innerWidth/innerHeight
      */
     public resizeBasedOnScreen() {
-        // ! incorrect behaviour -- when only one of [width, height] is 'auto', and the other is fixed,
-        // and sizing is not 'none', the canvas doesn't become larger than the specified width or height.
-        // The correct behaviour with the above settings should ensure the entire window is covered.
-        // and { sizing: 'fit' and 'auto' } should behave the same.
-        let targetWidth = this.options.width === "auto" ? innerWidth : this.options.width;
-        let targetHeight = this.options.height === "auto" ? innerHeight : this.options.height;
-        let [canvasBoundingBoxWidth, canvasBoundingBoxHeight] = this.determineTargetCanvasBoundingBox(targetWidth, targetHeight);
-        const dpiScaling = this.options.dpr === "none" ? 1 : window.devicePixelRatio || 1;
-
-        // Re-auto-sizing. If the width or height is auto, we resize the bounding box to ensure
-        // it covers the full width/height. (The first bounding box may be shrinked to not fill the
-        // full width/height)
-        if (this.options.width === "auto") {
-            canvasBoundingBoxWidth = targetWidth;
-            targetWidth *= targetHeight / canvasBoundingBoxHeight; // increase targetWidth to fill entire width
-        }
-        if (this.options.height === "auto") {
-            canvasBoundingBoxHeight = targetHeight;
-            targetHeight *= targetWidth / canvasBoundingBoxWidth; // increase targetHeight to fill entire height
-        }
+        const scaling = this.determineCanvasBoundingBoxScaling();
+        const targetWidth = this.options.width === "auto" ? innerWidth / scaling : this.options.width;
+        const targetHeight = this.options.height === "auto" ? innerHeight / scaling : this.options.height;
+        const boundingBoxWidth = Math.round(targetWidth * scaling);
+        const boundingBoxHeight = Math.round(targetHeight * scaling);
 
         // Setting new canvas size.
         let newWidth;
@@ -79,14 +64,14 @@ export class Canvas {
 
         // 'resize' and 'scale' both match the found bounding box
         if (this.options.sizingMethod === "resize") {
-            newWidth = canvasBoundingBoxWidth;
-            newHeight = canvasBoundingBoxHeight;
+            newWidth = boundingBoxWidth;
+            newHeight = boundingBoxHeight;
             this.scaling = 1;
         } else if (this.options.sizingMethod === "scale") {
             // 'scaleImage' keeps the original width / height options and uses the rendering context to zoom
             newWidth = targetWidth;
             newHeight = targetHeight;
-            this.scaling = canvasBoundingBoxWidth / targetWidth;
+            this.scaling = scaling;
         } else { // this.options.sizingMethod === "scaleImage"
             // 'scaleImage' keeps the original width / height options and uses CSS to size the canvas instead
             newWidth = targetWidth;
@@ -95,65 +80,57 @@ export class Canvas {
         }
 
         // Dealing with dpr != 1.
+        const dpiScaling = this.options.dpr === "none" ? 1 : window.devicePixelRatio || 1;
         if (this.options.dpr === "scale") {
             this.scaling *= dpiScaling;
-            this.width = newWidth;
-            this.height = newHeight;
-            this.canvas.width = this.actualWidth = Math.round(this.scaling * newWidth);
-            this.canvas.height = this.actualHeight = Math.round(this.scaling * newHeight);
-            this.X.scale(this.scaling, this.scaling);
-        } else { // ['none', 'oneToOne'].includes(this.options.this.dprScaling)
-            // 'none' does nothing here because dpiScaling is set to 1 earlier
-            this.canvas.width = this.actualWidth = this.width = dpiScaling * newWidth;
-            this.canvas.height = this.actualHeight = this.height = dpiScaling * newHeight;
-        }
+        } else if (this.options.dpr === "oneToOne") {
+            newWidth *= dpiScaling;
+            newHeight *= dpiScaling;
+        } // else this.options.this.dprScaling === "none"
 
         // Centering the canvas.
         if (this.options.centering) {
-            this.offsetX = (innerWidth - canvasBoundingBoxWidth) / 2;
-            this.offsetY = (innerHeight - canvasBoundingBoxHeight) / 2;
+            this.offsetX = (innerWidth - boundingBoxWidth) / 2;
+            this.offsetY = (innerHeight - boundingBoxHeight) / 2;
         } else {
             this.offsetX = this.offsetY = 0;
         }
 
+        // Apply
+        this.width = newWidth;
+        this.height = newHeight;
+        this.canvas.width = this.actualWidth = Math.round(this.scaling * newWidth);
+        this.canvas.height = this.actualHeight = Math.round(this.scaling * newHeight);
+        this.X.scale(this.scaling, this.scaling);
+
         // Apply CSS styles.
-        this.canvas.style.width = canvasBoundingBoxWidth + "px";
-        this.canvas.style.height = canvasBoundingBoxHeight + "px";
+        this.canvas.style.width = boundingBoxWidth + "px";
+        this.canvas.style.height = boundingBoxHeight + "px";
         this.canvas.style.left = this.offsetX + "px";
         this.canvas.style.top = this.offsetY + "px";
 
         this.lastConstraintWidth = innerWidth;
         this.lastConstraintHeight = innerHeight;
-
-        console.log(this.width, this.height);
     }
 
     /**
-     * Finds a width and height of a canvas size that fulfills requirements while preserving aspect ratio.
+     * Find how much to increase width and height of canvas size to fulfills requirements.
      */
-    private determineTargetCanvasBoundingBox(targetWidth: number, targetHeight: number): [number, number] {
-        const targetWidthHeightRatio = targetWidth / targetHeight;
-        const screenWidthHeightRatio = innerWidth / innerHeight;
+    private determineCanvasBoundingBoxScaling(): number {
+        if (this.options.width === 'auto' && this.options.height === 'auto') {
+            return 1;
+        }
 
-        // determine rectangle 
         if (this.options.sizing === "fit") {
-            if (targetWidthHeightRatio < screenWidthHeightRatio) {
-                // width is limiting
-                return [Math.round(innerHeight * targetWidthHeightRatio), innerHeight];
-            } else {
-                // height is limiting
-                return [innerWidth, Math.round(innerWidth / targetWidthHeightRatio)];
-            }
+            const widthScaling = this.options.width === 'auto' ? Infinity : innerWidth / this.options.width;
+            const heightScaling = this.options.height === 'auto' ? Infinity : innerHeight / this.options.height;
+            return Math.min(widthScaling, heightScaling);
         } else if (this.options.sizing === "cover") {
-            if (targetWidthHeightRatio < screenWidthHeightRatio) {
-                // width is smaller
-                return [innerWidth, Math.round(innerWidth / targetWidthHeightRatio)];
-            } else {
-                // height is bigger
-                return [Math.round(innerHeight * targetWidthHeightRatio), innerHeight];
-            }
+            const widthScaling = this.options.width === 'auto' ? 0 : innerWidth / this.options.width;
+            const heightScaling = this.options.height === 'auto' ? 0 : innerHeight / this.options.height;
+            return Math.max(widthScaling, heightScaling);
         } else { // this.options.sizing === "none"
-            return [targetWidth, targetHeight];
+            return 1;
         }
     }
 
@@ -232,7 +209,6 @@ export interface CanvasSizeOptions {
      */
     sizing?: 'none' | 'cover' | 'fit';
 
-
     /**
      * Controls the method to resize the canvas
      *   - 'resize' - Changes the canvas's width and height, retaining aspect ratio
@@ -242,7 +218,7 @@ export interface CanvasSizeOptions {
      * If width and height are 'auto', then this option has no effect.
      * If resizing is 'none', then this options has no effect.
      * 
-     * default: 'resize'; 
+     * default: 'scale'; 
      */
     sizingMethod?: 'resize' | 'scale' | 'scaleImage';
 

@@ -60,7 +60,7 @@ const defaultCanvasSizeOptions: Required<CanvasSizeOptions> = {
     height: 'auto',
     autoResize: true,
     centering: true,
-    sizingMethod: 'resize',
+    sizingMethod: 'scale',
     sizing: 'fit',
     dpr: 'scale'
 };
