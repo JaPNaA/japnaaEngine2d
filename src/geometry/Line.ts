@@ -1,7 +1,7 @@
-import { Vec2 } from "./Vec2.js";
+import { Vec2, Vec2M } from "./Vec2.js";
 
-export class Line {
-    constructor(public start: Vec2, public end: Vec2) { }
+export class LineM {
+    constructor(public start: Vec2M, public end: Vec2M) { }
 
     public static isIntersectingLines(
         a: Line, b: Line
@@ -13,4 +13,9 @@ export class Line {
         u = ((a.start.y - a.end.y) * (b.end.x - a.start.x) + (a.end.x - a.start.x) * (b.end.y - a.start.y)) / t;
         return 0 < v && v < 1 && 0 < u && u < 1;
     };
+}
+
+export interface Line {
+    readonly start: Vec2;
+    readonly end: Vec2;
 }

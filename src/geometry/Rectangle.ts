@@ -1,4 +1,4 @@
-export class Rectangle {
+export class RectangleM {
     constructor(public x: number, public y: number, public width: number, public height: number) { }
 
     public static isColliding(rect1: Rectangle, rect2: Rectangle) {
@@ -9,19 +9,24 @@ export class Rectangle {
     }
 
     public isColliding(other: Rectangle) {
-        return Rectangle.isColliding(this, other);
+        return RectangleM.isColliding(this, other);
     }
 
     public centerX() {
         return this.x + this.width / 2;
     }
+
     public centerY() {
         return this.y + this.height / 2;
     }
+
     public rightX() {
         return this.x + this.width;
     }
+
     public bottomY() {
         return this.y + this.height;
     }
 }
+
+export type Rectangle = Readonly<RectangleM>;
