@@ -1,4 +1,4 @@
-import { EventBus } from "../EventBus.js";
+import { EventBus } from "../util/EventBus.js";
 import { CanvasElm } from "./CanvasElm.js";
 
 export abstract class CanvasElmWithEventBus extends CanvasElm {

@@ -1,4 +1,6 @@
-import { Canvas, CanvasSizeOptions } from "./Canvas.js";
+import { Canvas, CanvasOptions } from "./Canvas.js";
+import { CanvasSizeOptions } from "./CanvasSizer.js";
+import { HTMLOverlay } from "./HTMLOverlay.js";
 import { KeyboardInput } from "./KeyboardInput.js";
 import { MouseInput, MouseInputWithCollision, MouseInputWithoutCollision } from "./MouseInput.js";
 
@@ -9,6 +11,7 @@ export class JaPNaAEngine2d {
     public mouse: MouseInput; // mouse.collisionType getter gives error if mouseInCollisionSystem is false
     // public touch: TouchInput;
     public canvas: Canvas;
+    public htmlOverlay: HTMLOverlay;
 
     private options: Required<JaPNaAEngine2dOptions>;
 
@@ -29,10 +32,11 @@ export class JaPNaAEngine2d {
             ...defaultCanvasOptions,
             ...this.options.canvas,
             sizing: {
-            ...defaultCanvasSizeOptions,
+                ...defaultCanvasSizeOptions,
                 ...this.options.canvas.sizing
             }
         });
+        this.htmlOverlay = new HTMLOverlay();
 
         if (this.options.parentElement === document.body) {
             this.canvas.appendTo(this.options.parentElement);
@@ -42,19 +46,10 @@ export class JaPNaAEngine2d {
         } else {
             throw new Error("Not implemented");
         }
+
+        // this.world = new World();
     }
 }
-
-/**
- * Default JaPNaAEngine2dOptions
- */
-const defaultJaPNaAEngineOptions: Required<JaPNaAEngine2dOptions> = {
-    canvasSize: 'auto',
-    collision: 'sortedAuto',
-    parentElement: document.body,
-    touchInputAsMouseInput: true,
-    mouseInCollisionSystem: true
-};
 
 /**
  * Default CanvasSizeOptions
