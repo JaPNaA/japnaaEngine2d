@@ -1,19 +1,40 @@
+import { Camera } from "./Camera.js";
 import { Canvas, CanvasOptions } from "./Canvas.js";
+import { ParentWorldElm } from "./canvasElm/ParentWorldElm.js";
+import { WorldElm } from "./canvasElm/WorldElm.js";
+import { WorldElmWithSubscriptions } from "./canvasElm/WorldElmWithEventBus.js";
 import { CanvasSizeOptions, CanvasSizer } from "./CanvasSizer.js";
+import { CollisionSystem } from "./collision/CollisionSystem.js";
 import { Component, Elm, InputElm } from "./elements.js";
 import { HTMLOverlay, HTMLOverlayOptions } from "./HTMLOverlay.js";
 import { KeyboardInput } from "./KeyboardInput.js";
 import { MouseInput, MouseInputWithCollision, MouseInputWithoutCollision } from "./MouseInput.js";
+import { Ticker } from "./Ticker.js";
+import { World } from "./World.js";
 
 export class JaPNaAEngine2d {
-    // public world: World;
-    // public collider: Collider;
+    /** Keyboard input */
     public keyboard: KeyboardInput; // keyboard mouse touch should only be enabled once used
+    /** Mouse input */
     public mouse: MouseInput; // mouse.collisionType getter gives error if mouseInCollisionSystem is false
     // public touch: TouchInput;
-    public canvas: Canvas;
+
+    /** The size of the canvas */
     public sizer: CanvasSizer;
+    /** The canvas everything is rendered to */
+    public canvas: Canvas;
+    /** An alternate 'canvas' using HTML elements. Useful for getting user input. */
     public htmlOverlay: HTMLOverlay;
+
+    /** Offsetting and zooming in the canvas */
+    public camera: Camera;
+    /** Detects and handles collisions between elements */
+    public collisions: CollisionSystem;
+    /** The world contains all elements */
+    public world: World;
+    /** Controls timing of events in the engine */
+    public ticker: Ticker;
+    // public renderer: Renderer;
 
     private options: Required<JaPNaAEngine2dOptions>;
 
@@ -45,6 +66,11 @@ export class JaPNaAEngine2d {
             ...defaultHTMLOverlayOptions,
             ...this.options.htmlOverlay
         }, this.sizer);
+        
+        this.camera = new Camera(this.sizer);
+        this.collisions = new CollisionSystem();
+        this.world = new World(this);
+        this.ticker = new Ticker(this);
 
         if (this.options.parentElement === document.body) {
             this.canvas.appendTo(this.options.parentElement);
@@ -55,13 +81,39 @@ export class JaPNaAEngine2d {
         } else {
             throw new Error("Not implemented");
         }
+    }
 
-        // this.world = new World();
+    public tick() {
+        this.ticker.tickAll(this.world.getElms());
+    }
+
+    public draw() {
+        const X = this.canvas.X;
+
+        X.clearRect(0, 0, this.canvas.width, this.canvas.height);
+
+        X.save();
+
+        this.camera.applyTransform(X);
+
+        for (const elm of this.world.getElms()) {
+            elm.draw();
+        }
+
+        X.restore();
+    }
+
+    public dispose() {
+        this.keyboard._dispose();
+        this.mouse._dispose();
+        this.sizer._dispose();
     }
 }
 
 // include elements.ts exports
 export { Elm, InputElm, Component };
+// include canvas elements
+export { ParentWorldElm, WorldElm, WorldElmWithSubscriptions }
 
 /**
  * Default CanvasSizeOptions
