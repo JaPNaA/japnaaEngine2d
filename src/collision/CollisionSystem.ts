@@ -1,4 +1,4 @@
-import { Rectangle } from "../geometry/Rectangle.js";
+import { Rectangle, RectangleM } from "../geometry/Rectangle.js";
 import { removeElmFromArray } from "../util/removeElmFromArray.js";
 import { CollisionReactionMap } from "./CollisionReactionMap.js";
 import { Hitbox } from "./Hitbox.js";
@@ -19,7 +19,7 @@ export class CollisionSystem {
     public getCollisionsWith(rectangle: Rectangle): Hitbox<any>[] {
         const colliding: Hitbox<any>[] = [];
         for (const hitbox of this.hitboxes) {
-            if (Rectangle.isColliding(rectangle, hitbox.rectangle)) {
+            if (RectangleM.isColliding(rectangle, hitbox.rectangle)) {
                 colliding.push(hitbox);
             }
         }
@@ -35,7 +35,7 @@ export class CollisionSystem {
             for (let j = i + 1; j < numHitboxes; j++) {
                 const rect2 = this.hitboxes[j].rectangle;
 
-                if (Rectangle.isColliding(rect1, rect2)) {
+                if (RectangleM.isColliding(rect1, rect2)) {
                     this.reactions.triggerReaction(this.hitboxes[i], this.hitboxes[j]);
                 }
             }

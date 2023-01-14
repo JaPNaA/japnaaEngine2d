@@ -1,4 +1,4 @@
-import { Rectangle } from "../util/Rectangle.js";
+import { RectangleM } from "../geometry/Rectangle.js";
 
 export interface Collidable {
     collisionType: Symbol;
@@ -6,6 +6,6 @@ export interface Collidable {
 }
 
 export class Hitbox<T extends Collidable> {
-    constructor(public rectangle: Rectangle, public elm: T) {
+    constructor(public rectangle: RectangleM, public elm: T) {
     }
 }

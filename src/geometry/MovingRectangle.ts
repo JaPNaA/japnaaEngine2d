@@ -1,6 +1,6 @@
-import { Rectangle } from "./Rectangle.js";
+import { RectangleM } from "./Rectangle.js";
 
-export class MovingRectangle extends Rectangle {
+export class MovingRectangleM extends RectangleM {
     public lastX: number;
     public lastY: number;
 
@@ -10,7 +10,7 @@ export class MovingRectangle extends Rectangle {
         this.lastY = y;
     }
 
-    setLasts() {
+    public setLasts() {
         this.lastX = this.x;
         this.lastY = this.y;
     }

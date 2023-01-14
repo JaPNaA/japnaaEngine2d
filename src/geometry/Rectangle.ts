@@ -1,3 +1,5 @@
+import { Vec2 } from "./Vec2";
+
 export class RectangleM {
     constructor(public x: number, public y: number, public width: number, public height: number) { }
 
@@ -10,6 +12,11 @@ export class RectangleM {
 
     public isColliding(other: Rectangle) {
         return RectangleM.isColliding(this, other);
+    }
+
+    public containsVec2(vec2: Vec2) {
+        return this.x <= vec2.x && this.x + this.width >= vec2.x &&
+            this.y <= vec2.y && this.y + this.height >= vec2.y;
     }
 
     public centerX() {

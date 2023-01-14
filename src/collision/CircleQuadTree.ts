@@ -1,4 +1,4 @@
-import { Vec2 } from "../geometry/Vec2.js";
+import { Vec2M } from "../geometry/Vec2.js";
 
 
 // --- quadtree circle collider
@@ -825,7 +825,7 @@ class CircleCollider<T extends Collidable> {
         }
     }
 
-    public setBoundaries(boundaries: Vec2): void {
+    public setBoundaries(boundaries: Vec2M): void {
         this.quadTree = new CircleQuadTree(Math.max(boundaries.x, boundaries.y));
     }
 

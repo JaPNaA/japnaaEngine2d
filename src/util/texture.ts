@@ -1,6 +1,6 @@
-import { Rectangle } from "../geometry/Rectangle.js.js";
+import { RectangleM } from "../geometry/Rectangle.js";
 
-class Texture extends Rectangle {
+class Texture extends RectangleM {
     public imageSrc: HTMLImageElement | HTMLCanvasElement;
 
     constructor(src: HTMLImageElement | HTMLCanvasElement, x: number, y: number, width: number, height: number) {
