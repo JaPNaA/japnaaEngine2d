@@ -15,7 +15,11 @@ export class HTMLOverlay extends Component {
 
     private updateSizes() {
         const elm = this.elm.getHTMLElement();
-        if (this.options.stick) {
+        // note: this implementation is problematic because the correct behaviour of
+        // stick relies on `{ scale: true }`
+        // this implementation doesn't handle high dpr correctly, and is not tested with all the
+        // different types of sizings provided by the sizer
+        if (this.options.stick) { 
             elm.style.left = this.sizer.offset.x + "px";
             elm.style.top = this.sizer.offset.y + "px";
         }
