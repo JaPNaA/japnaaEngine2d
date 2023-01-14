@@ -1,91 +1,76 @@
-import { Rectangle } from "./Rectangle.js";
+import { WorldElm } from "./canvasElm/WorldElm.js";
+import { CanvasSizer } from "./CanvasSizer.js";
+import { RectangleM } from "./geometry/Rectangle.js";
+import { Vec2M } from "./geometry/Vec2.js";
 
-class Camera {
-    public rect = new Rectangle(0, 0, 1, 1);
+export class Camera {
+    public rect = new RectangleM(0, 0, 1, 1);
     public scale: number;
-    
+
     private tScale: number;
 
-    private cursorLocked: boolean;
+    private pos = new Vec2M(0, 0);
+    private attachee?: WorldElm;
 
-    private attachee?: any;
-    private canvas: Canvas;
-
-    constructor(canvas: Canvas) {
+    constructor(private sizer: CanvasSizer) {
         this.tScale = this.scale = 1;
-        this.canvas = canvas;
-
-        this.cursorLocked = false;
+        this.sizer.onResize.subscribe(() => {
+            this.rect.width = sizer.width;
+            this.rect.height = sizer.height;
+        });
+        this.tick();
     }
 
     public goto(x: number, y: number, scale?: number): void {
         if (scale) {
             this.tScale = scale;
         }
-        this.x = -x * this.tScale + this.canvas.width / 2;
-        this.y = -y * this.tScale + this.canvas.height / 2;
-    }
-
-    private move(dx: number, dy: number): void {
-        this.x += dx;
-        this.y += dy;
-    }
-
-    public apply(X: CanvasRenderingContext2D): void {
-        X.translate(this.x, this.y);
-        X.scale(this.scale, this.scale);
-    }
-
-    public applyTranslateOnly(X: CanvasRenderingContext2D): void {
-        X.translate(this.x, this.y);
+        this.rect.x = x;
+        this.rect.y = y;
     }
 
     public gotoNoTransition(x: number, y: number, scale?: number): void {
-        if (scale) {
-            this.scale = this.tScale = scale;
-        }
-        this.x = -x * this.tScale + this.canvas.width / 2;
-        this.y = -y * this.tScale + this.canvas.height / 2;
+        this.goto(x, y, scale);
+        this.scale = this.tScale;
     }
 
-    public attachTo(entity?: IEntity): void {
-        this.attachee = entity;
+    public move(dx: number, dy: number): void {
+        this.rect.x += dx;
+        this.rect.y += dy;
     }
 
-
-    public _update() {
-        this.rect.width = this.canvas.width;
-        this.rect.height = this.canvas.height;
-
-        if (!this.following) { return; }
-        this.rect.x = this.following.x + this.following.width / 2 - this.rect.width / 2 / this.scale;
-        this.rect.y = this.following.y + this.following.height / 2 - this.rect.height / 2 / this.scale;
-    }
-
-    public updateLocation(): void {
-        this.updateTarget();
-    }
-
-    private zoomInto(factor: number, x_: number, y_: number): void {
-        if (this.attachee) {
-            this.goto(this.attachee!.x, this.attachee!.y);
-        } else {
-            let x = x_;
-            let y = y_;
-
-            if (this.cursorLocked) {
-                x = innerWidth / 2;
-                y = innerHeight / 2;
-            }
-
-            const dx = -(x - this.tx) * (factor - 1);
-            const dy = -(y - this.ty) * (factor - 1);
-            this.tx += dx;
-            this.ty += dy;
+    public zoomInto(factor: number, x: number, y: number): void {
+        if (!this.attachee) {
+            const dx = -(x - this.pos.x) * (factor - 1);
+            const dy = -(y - this.pos.y) * (factor - 1);
+            this.pos.x += dx;
+            this.pos.y += dy;
         }
 
         this.tScale *= factor;
     }
-}
 
-export default Camera;
+    public applyTransform(X: CanvasRenderingContext2D): void {
+        X.translate(-this.rect.x, -this.rect.y);
+        X.scale(this.scale, this.scale);
+    }
+
+    public applyTranslateOnly(X: CanvasRenderingContext2D): void {
+        X.translate(-this.rect.x, -this.rect.y);
+    }
+
+
+    public attachTo(entity?: WorldElm): void {
+        this.attachee = entity;
+    }
+
+    public tick() {
+        if (this.attachee) {
+            this.pos.x = this.attachee.rect.centerX();
+            this.pos.y = this.attachee.rect.centerY();
+        }
+
+        this.rect.x = this.pos.x - this.rect.width / 2;
+        this.rect.y = this.pos.y - this.rect.height / 2;
+    }
+}
