@@ -1,20 +1,20 @@
-import { EventBus } from "../util/EventBus.js";
-import { WorldElm } from "./WorldElm.js";
+import { EventBus } from "../../util/EventBus.js";
+import { WorldElmComponent } from "../WorldElmWithComponents.js";
 
 /**
  * WorldElm with a subscription management system (this.subscribe(...)) that
  * automatically removes subscriptions on removal.
  */
-export abstract class WorldElmWithSubscriptions extends WorldElm {
+export abstract class SubscriptionsComponent extends WorldElmComponent {
     private subscriptionsList: [EventBus<any>, (data: any) => any][] = [];
 
-    protected subscribe<T>(bus: EventBus<T>, handler: (data: T) => any) {
-        const boundHandler = handler.bind(this);
+    public subscribe<T>(bus: EventBus<T>, handler: (data: T) => any) {
+        const boundHandler = handler.bind(this.parent);
         bus.subscribe(boundHandler);
         this.subscriptionsList.push([bus, boundHandler]);
     }
 
-    protected unsubscribe<T>(fromBus: EventBus<T>) {
+    public unsubscribe<T>(fromBus: EventBus<T>) {
         let unsubscribed = false;
         for (let i = this.subscriptionsList.length - 1; i >= 0; i--) {
             const [bus, handler] = this.subscriptionsList[i];
@@ -30,8 +30,6 @@ export abstract class WorldElmWithSubscriptions extends WorldElm {
     }
 
     public remove() {
-        super.remove();
-
         for (const [bus, handler] of this.subscriptionsList) {
             bus.unsubscribe(handler);
         }

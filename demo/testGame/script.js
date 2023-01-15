@@ -1,4 +1,5 @@
-import { Elm, JaPNaAEngine2d, WorldElmWithSubscriptions } from "../../build/JaPNaAEngine2d.js";
+import { WorldElmWithComponents } from "../../build/canvasElm/WorldElmWithComponents.js";
+import { Elm, JaPNaAEngine2d, KeyboardMovementComponent, SubscriptionsComponent } from "../../build/JaPNaAEngine2d.js";
 
 const engine = new JaPNaAEngine2d({
     sizing: {
@@ -9,18 +10,22 @@ const engine = new JaPNaAEngine2d({
     }
 });
 
-class Square extends WorldElmWithSubscriptions {
+class Square extends WorldElmWithComponents {
     constructor() {
         super();
+
+        this.subscriptions = this.addComponent(new SubscriptionsComponent());
 
         this.rect.x = 50;
         this.rect.y = 50;
         this.rect.width = 50;
         this.rect.height = 50;
 
-        this.subscribe(engine.keyboard.getKeydownBus(["Space", "KeyQ"]), this.resetX);
-        this.subscribe(engine.keyboard.getKeydownBus(["Space", "KeyE"]), this.resetY);
-        this.subscribe(engine.keyboard.getKeydownBus(["Escape", "KeyC"]), this.remove);
+        this.subscriptions.subscribe(engine.keyboard.getKeydownBus(["Space", "KeyQ"]), this.resetX);
+        this.subscriptions.subscribe(engine.keyboard.getKeydownBus(["Space", "KeyE"]), this.resetY);
+        this.subscriptions.subscribe(engine.keyboard.getKeydownBus(["Escape", "KeyC"]), this.remove);
+
+        this.keyboardMovement = this.addComponent(new KeyboardMovementComponent());
     }
 
     resetX() {
@@ -31,24 +36,6 @@ class Square extends WorldElmWithSubscriptions {
         this.rect.y = 50;
     }
 
-    tick() {
-        let vx = 0, vy = 0;
-        if (this.engine.keyboard.isDown(['ArrowUp', 'KeyW'])) {
-            vy--;
-        }
-        if (this.engine.keyboard.isDown(['ArrowDown', 'KeyS'])) {
-            vy++;
-        }
-        if (this.engine.keyboard.isDown(['ArrowLeft', 'KeyA'])) {
-            vx--;
-        }
-        if (this.engine.keyboard.isDown(['ArrowRight', 'KeyD'])) {
-            vx++;
-        }
-        if (vx && vy) { vx *= Math.SQRT1_2; vy *= Math.SQRT1_2; }
-        this.rect.x += vx * 800 * this.engine.ticker.timeElapsed;
-        this.rect.y += vy * 800 * this.engine.ticker.timeElapsed;
-    }
 
     drawRelative() {
         const X = this.engine.canvas.X;
@@ -62,15 +49,16 @@ class DraggableSquare extends Square {
     constructor() {
         super();
         this.hold = false;
-        this.subscribe(engine.mouse.onMousedown, this.onMousedown);
-        this.subscribe(engine.mouse.onMousemove, this.onMousemove);
-        this.subscribe(engine.mouse.onMouseup, () => this.hold = false);
+        this.subscriptions.subscribe(engine.mouse.onMousedown, this.onMousedown);
+        this.subscriptions.subscribe(engine.mouse.onMousemove, this.onMousemove);
+        this.subscriptions.subscribe(engine.mouse.onMouseup, () => this.hold = false);
     }
 
     onMousedown() {
         const canvasPos = this.engine.canvas.screenPosToCanvasPos(this.engine.mouse.screenPos);
         if (this.rect.containsVec2(canvasPos)) {
             this.hold = true;
+            this.removeComponent(this.keyboardMovement);
         }
     }
 

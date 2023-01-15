@@ -2,7 +2,7 @@ import { Camera } from "./Camera.js";
 import { Canvas, CanvasOptions } from "./Canvas.js";
 import { ParentWorldElm } from "./canvasElm/ParentWorldElm.js";
 import { WorldElm } from "./canvasElm/WorldElm.js";
-import { WorldElmWithSubscriptions } from "./canvasElm/WorldElmWithEventBus.js";
+import { SubscriptionsComponent } from "./canvasElm/components/SubscriptionsComponent.js";
 import { CanvasSizeOptions, CanvasSizer } from "./CanvasSizer.js";
 import { CollisionSystem } from "./collision/CollisionSystem.js";
 import { Component, Elm, InputElm } from "./elements.js";
@@ -11,6 +11,7 @@ import { KeyboardInput } from "./KeyboardInput.js";
 import { MouseInput, MouseInputWithCollision, MouseInputWithoutCollision } from "./MouseInput.js";
 import { Ticker } from "./Ticker.js";
 import { World } from "./World.js";
+import { KeyboardMovementComponent } from "./canvasElm/components/KeyboardMovementComponent.js";
 
 export class JaPNaAEngine2d {
     /** Keyboard input */
@@ -112,8 +113,10 @@ export class JaPNaAEngine2d {
 
 // include elements.ts exports
 export { Elm, InputElm, Component };
-// include canvas elements
-export { ParentWorldElm, WorldElm, WorldElmWithSubscriptions }
+// include world elements
+export { ParentWorldElm, WorldElm }
+// include world element components
+export { SubscriptionsComponent, KeyboardMovementComponent }
 
 /**
  * Default CanvasSizeOptions
