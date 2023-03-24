@@ -1,8 +1,10 @@
-import { Vec2M } from "./geometry/Vec2.js";
+import { Collidable, Hitbox } from "./collision/Hitbox.js";
+import { RectangleM } from "./geometry/Rectangle.js";
+import { Vec2, Vec2M } from "./geometry/Vec2.js";
 import { EventBus } from "./util/EventBus.js";
 
 export abstract class MouseInput {
-    public abstract readonly collisionType: Symbol;
+    public abstract readonly collisionType: symbol;
     public leftDown = false;
     public rightDown = false;
     public screenPos: Vec2M = new Vec2M(0, 0);
@@ -30,7 +32,7 @@ export abstract class MouseInput {
         removeEventListener("contextmenu", this.contextmenuHandler);
     }
 
-    private mouseupHandler(event: MouseEvent) {
+    protected mouseupHandler(event: MouseEvent) {
         if (event.button === 0) {
             this.leftDown = false;
         } else if (event.button === 2) {
@@ -39,7 +41,7 @@ export abstract class MouseInput {
         this.onMouseup.send(event);
     }
 
-    private mousedownHandler(event: MouseEvent) {
+    protected mousedownHandler(event: MouseEvent) {
         if (event.button === 0) {
             this.leftDown = true;
         } else {
@@ -48,7 +50,7 @@ export abstract class MouseInput {
         this.onMousedown.send(event);
     }
 
-    private mousemoveHandler(event: MouseEvent) {
+    protected mousemoveHandler(event: MouseEvent) {
         this.screenPos.x = event.clientX;
         this.screenPos.y = event.clientY;
         this.onMousemove.send(event);
@@ -59,12 +61,31 @@ export abstract class MouseInput {
     }
 }
 
-export class MouseInputWithCollision extends MouseInput {
-    public readonly collisionType: Symbol = Symbol();
+export class MouseInputWithCollision extends MouseInput implements Collidable {
+    public readonly collisionType: symbol = Symbol();
+    public hitbox: Hitbox<MouseInputWithCollision>;
+    public rect: RectangleM = new RectangleM(0, 0, 0, 0);
+    /**
+     * Function that transforms from screen to world position. If left unset,
+     * does not do anything.
+     */
+    public transformToWorldPos: (screenPos: Vec2) => Vec2 = x => x;
+
+    constructor() {
+        super();
+        this.hitbox = new Hitbox(this.rect, this);
+    }
+
+    protected mousemoveHandler(event: MouseEvent): void {
+        super.mousemoveHandler(event);
+        const worldPos = this.transformToWorldPos(this.screenPos);
+        this.rect.x = worldPos.x;
+        this.rect.y = worldPos.y;
+    }
 }
 
 export class MouseInputWithoutCollision extends MouseInput {
-    public get collisionType(): Symbol {
+    public get collisionType(): symbol {
         throw new Error("Set mouseInCollisionSystem to true in JaPNaAEngine2d constructor options to use enable the mouse hitbox");
     }
 }

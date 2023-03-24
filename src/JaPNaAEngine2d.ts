@@ -12,6 +12,7 @@ import { MouseInput, MouseInputWithCollision, MouseInputWithoutCollision } from 
 import { Ticker } from "./Ticker.js";
 import { World } from "./World.js";
 import { KeyboardMovementComponent } from "./canvasElm/components/KeyboardMovementComponent.js";
+import { WorldElmWithComponents } from "./canvasElm/WorldElmWithComponents.js";
 
 export class JaPNaAEngine2d {
     /** Keyboard input */
@@ -67,11 +68,17 @@ export class JaPNaAEngine2d {
             ...defaultHTMLOverlayOptions,
             ...this.options.htmlOverlay
         }, this.sizer);
-        
+
         this.camera = new Camera(this.sizer);
         this.collisions = new CollisionSystem();
         this.world = new World(this);
         this.ticker = new Ticker(this);
+
+        if (this.options.mouseInCollisionSystem) {
+            const mouse = this.mouse as MouseInputWithCollision;
+            mouse.transformToWorldPos = screenPos => this.canvas.screenPosToCanvasPos(screenPos);
+            this.collisions.addHitbox(mouse.hitbox);
+        }
 
         if (this.options.parentElement === document.body) {
             this.canvas.appendTo(this.options.parentElement);
@@ -84,10 +91,16 @@ export class JaPNaAEngine2d {
         }
     }
 
+    public start() {
+        throw new Error("Not implemented.");
+    }
+
+    // todo: make private
     public tick() {
         this.ticker.tickAll(this.world.getElms());
     }
 
+    // todo: make private
     public draw() {
         const X = this.canvas.X;
 
@@ -114,7 +127,7 @@ export class JaPNaAEngine2d {
 // include elements.ts exports
 export { Elm, InputElm, Component };
 // include world elements
-export { ParentWorldElm, WorldElm }
+export { ParentWorldElm, WorldElm, WorldElmWithComponents }
 // include world element components
 export { SubscriptionsComponent, KeyboardMovementComponent }
 

@@ -3,9 +3,9 @@ import { Collidable, Hitbox } from "./Hitbox.js";
 type ReactionFunction = (a: Hitbox<any>, b: Hitbox<any>) => void
 
 export class CollisionReactionMap {
-    private map: Map<Symbol, Map<Symbol, ReactionFunction>> = new Map();
+    private map: Map<symbol, Map<symbol, ReactionFunction>> = new Map();
 
-    public setCollisionReaction(a: Symbol, b: Symbol, reaction: ReactionFunction) {
+    public setCollisionReaction(a: symbol, b: symbol, reaction: ReactionFunction) {
         this.setEntry(a, b, reaction);
         this.setEntry(b, a, (a, b) => reaction(b, a));
     }
@@ -25,7 +25,7 @@ export class CollisionReactionMap {
         reactionFunc(a, b);
     }
 
-    private setEntry(a: Symbol, b: Symbol, reaction: ReactionFunction) {
+    private setEntry(a: symbol, b: symbol, reaction: ReactionFunction) {
         const existingEntry = this.map.get(a);
         if (existingEntry) {
             existingEntry.set(b, reaction);

@@ -1,7 +1,7 @@
 import { RectangleM } from "../geometry/Rectangle.js";
 
 export interface Collidable {
-    collisionType: Symbol;
+    collisionType: symbol;
     onCollision?: (other: Collidable) => void;
 }
 
