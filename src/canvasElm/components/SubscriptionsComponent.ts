@@ -5,7 +5,7 @@ import { WorldElmComponent } from "../WorldElmWithComponents.js";
  * WorldElm with a subscription management system (this.subscribe(...)) that
  * automatically removes subscriptions on removal.
  */
-export abstract class SubscriptionsComponent extends WorldElmComponent {
+export class SubscriptionsComponent extends WorldElmComponent {
     private subscriptionsList: [EventBus<any>, (data: any) => any][] = [];
 
     public subscribe<T>(bus: EventBus<T>, handler: (data: T) => any) {
