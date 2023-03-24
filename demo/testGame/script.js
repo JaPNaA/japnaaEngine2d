@@ -1,5 +1,5 @@
-import { WorldElmWithComponents } from "../../build/canvasElm/WorldElmWithComponents.js";
-import { Elm, JaPNaAEngine2d, KeyboardMovementComponent, SubscriptionsComponent } from "../../build/JaPNaAEngine2d.js";
+import { Hitbox } from "../../build/collision/Hitbox.js";
+import { Elm, JaPNaAEngine2d, KeyboardMovementComponent, SubscriptionsComponent, WorldElmWithComponents } from "../../build/JaPNaAEngine2d.js";
 
 const engine = new JaPNaAEngine2d({
     sizing: {
@@ -7,12 +7,17 @@ const engine = new JaPNaAEngine2d({
         sizingMethod: "scale",
         sizing: 'fit',
         dpr: 'oneToOne'
-    }
+    },
+    mouseInCollisionSystem: true
 });
 
 class Square extends WorldElmWithComponents {
     constructor() {
         super();
+
+        this.collisionType = Square.collisionType;
+        engine.collisions.addHitbox(new Hitbox(this.rect, this));
+        this.color = "#fff";
 
         this.subscriptions = this.addComponent(new SubscriptionsComponent());
 
@@ -40,15 +45,27 @@ class Square extends WorldElmWithComponents {
     drawRelative() {
         const X = this.engine.canvas.X;
 
-        X.fillStyle = "#fff";
+        X.fillStyle = this.color;
         X.fillRect(0, 0, 50, 50);
     }
+
+    /**
+     * @param {import("../../build/collision/Hitbox.js").Collidable} other
+     */
+    onCollision(other) {
+        // if (other.collisionType === engine.mouse.collisionType) {
+        //     this.color = "#0f0";
+        // }
+    }
 }
+
+Square.collisionType = Symbol();
 
 class DraggableSquare extends Square {
     constructor() {
         super();
         this.hold = false;
+        this.keyboardMovementEnabled = true;
         this.subscriptions.subscribe(engine.mouse.onMousedown, this.onMousedown);
         this.subscriptions.subscribe(engine.mouse.onMousemove, this.onMousemove);
         this.subscriptions.subscribe(engine.mouse.onMouseup, () => this.hold = false);
@@ -58,7 +75,10 @@ class DraggableSquare extends Square {
         const canvasPos = this.engine.canvas.screenPosToCanvasPos(this.engine.mouse.screenPos);
         if (this.rect.containsVec2(canvasPos)) {
             this.hold = true;
-            this.removeComponent(this.keyboardMovement);
+            if (this.keyboardMovementEnabled) {
+                this.removeComponent(this.keyboardMovement);
+                this.keyboardMovementEnabled = false;
+            }
         }
     }
 
@@ -69,6 +89,10 @@ class DraggableSquare extends Square {
         this.rect.y = canvasPos.y;
     }
 }
+
+engine.collisions.reactions.setCollisionReaction(Square.collisionType, engine.mouse.collisionType, (square, mouse) => {
+    square.elm.color = "#00f";
+});
 
 function requanf() {
     engine.tick();
