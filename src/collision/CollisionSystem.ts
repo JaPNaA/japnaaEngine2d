@@ -39,9 +39,16 @@ export class CollisionSystem {
     public _checkCollisions() {
         const numHitboxes = this.hitboxes.length;
         const sleepingArray = new Array(numHitboxes);
+        const abs = Math.abs;
         for (let i = 0; i < numHitboxes; i++) {
             const hitbox = this.hitboxes[i];
-            sleepingArray[i] = hitbox.rectangle.sameWithinThreshold(hitbox._quadTreeRecord, SLEEP_THRESHOLD);
+            // sleepingArray[i] = hitbox.rectangle.sameWithinThreshold(hitbox._quadTreeRecord, SLEEP_THRESHOLD);
+            // next line is inlined version
+            sleepingArray[i] = abs(hitbox.rectangle.x - hitbox._quadTreeRecord.x) < SLEEP_THRESHOLD &&
+                abs(hitbox.rectangle.y - hitbox._quadTreeRecord.y) < SLEEP_THRESHOLD &&
+                abs(hitbox.rectangle.width - hitbox._quadTreeRecord.width) < SLEEP_THRESHOLD &&
+                abs(hitbox.rectangle.height - hitbox._quadTreeRecord.height) < SLEEP_THRESHOLD;
+
             hitbox._collidedWith.length = 0;
             if (!sleepingArray[i]) {
                 this.quadTree.updateSingle(hitbox);

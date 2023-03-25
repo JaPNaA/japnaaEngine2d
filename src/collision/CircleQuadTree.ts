@@ -200,7 +200,7 @@ class QuadTree implements QuadTreeChild {
             }
 
 
-            if (!lowBranch && that.elementCount < QuadTree.branchMin) {
+            if (that.elementCount < QuadTree.branchMin) {
                 lowBranch = that;
             }
 

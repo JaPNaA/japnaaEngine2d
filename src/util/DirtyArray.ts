@@ -23,11 +23,12 @@ export class DirtyArray<T> {
                 yield item;
             }
         }
-        this.clean();
+        if (!this.isClean) {
+            this.clean();
+        }
     }
 
     public clean() {
-        if (this.isClean) { return; }
         for (let i = this.items.length - 1; i >= 0; i--) {
             if (this.items[i] === undefined) {
                 this.items.splice(i, 1);

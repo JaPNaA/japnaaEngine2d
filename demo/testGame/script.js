@@ -21,18 +21,10 @@ class Square extends WorldElmWithComponents {
         this.collisionType = Square.collisionType;
         this.color = "#fff";
 
-        this.subscriptions = this.addComponent(new SubscriptionsComponent());
-
         this.rect.x = 50;
         this.rect.y = 50;
         this.rect.width = 50;
         this.rect.height = 50;
-
-        this.subscriptions.subscribe(engine.keyboard.getKeydownBus(["Space", "KeyQ"]), this.resetX);
-        this.subscriptions.subscribe(engine.keyboard.getKeydownBus(["Space", "KeyE"]), this.resetY);
-        this.subscriptions.subscribe(engine.keyboard.getKeydownBus(["Escape", "KeyC"]), this.remove);
-
-        this.keyboardMovement = this.addComponent(new KeyboardMovementComponent());
     }
 
     _setEngine(engine) {
@@ -68,12 +60,24 @@ class Square extends WorldElmWithComponents {
 
 Square.collisionType = Symbol();
 
+class KeyboardMovingSquare extends Square {
+    constructor() {
+        super();
+        this.subscriptions = this.addComponent(new SubscriptionsComponent());
+
+        this.subscriptions.subscribe(engine.keyboard.getKeydownBus(["Space", "KeyQ"]), this.resetX);
+        this.subscriptions.subscribe(engine.keyboard.getKeydownBus(["Space", "KeyE"]), this.resetY);
+        this.subscriptions.subscribe(engine.keyboard.getKeydownBus(["Escape", "KeyC"]), this.remove);
+
+        this.keyboardMovement = this.addComponent(new KeyboardMovementComponent());
+    }
+}
+
 class DraggableSquare extends Square {
     constructor() {
         super();
         this.hold = false;
-        this.removeComponent(this.keyboardMovement);
-        this.removeComponent(this.subscriptions);
+        this.subscriptions = this.addComponent(new SubscriptionsComponent());
         this.subscriptions.subscribe(engine.mouse.onMousedown, this.onMousedown);
         this.subscriptions.subscribe(engine.mouse.onMouseup, () => this.hold = false);
     }
@@ -134,15 +138,15 @@ engine.htmlOverlay.elm.append(
 
 const squares = [];
 
-for (let i = 0; i < 100; i++) {
+for (let i = 0; i < 1000; i++) {
     const square = new DraggableSquare();
     squares.push(square);
-    square.rect.x = Math.random() * 1000;
-    square.rect.y = Math.random() * 1000;
+    square.rect.x = Math.random() * 10000;
+    square.rect.y = Math.random() * 10000;
     engine.world.addElm(square);
 }
 
-const square3 = new Square();
+const square3 = new KeyboardMovingSquare();
 square3.rect.x += 100;
 square3.rect.y += 100;
 engine.camera.attachTo(square3);
