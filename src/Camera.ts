@@ -9,7 +9,6 @@ export class Camera {
 
     private tScale: number;
 
-    private pos = new Vec2M(0, 0);
     private attachee?: WorldElm;
 
     constructor(private sizer: CanvasSizer) {
@@ -41,10 +40,10 @@ export class Camera {
 
     public zoomInto(factor: number, x: number, y: number): void {
         if (!this.attachee) {
-            const dx = -(x - this.pos.x) * (factor - 1);
-            const dy = -(y - this.pos.y) * (factor - 1);
-            this.pos.x += dx;
-            this.pos.y += dy;
+            const dx = -(x - this.rect.x) * (factor - 1);
+            const dy = -(y - this.rect.y) * (factor - 1);
+            this.rect.x += dx;
+            this.rect.y += dy;
         }
 
         this.tScale *= factor;
@@ -53,7 +52,7 @@ export class Camera {
     public applyTransform(X: CanvasRenderingContext2D): void {
         X.translate(this.rect.width / 2, this.rect.height / 2);
         X.scale(this.scale, this.scale);
-        X.translate(-this.pos.x, -this.pos.y);
+        X.translate(-this.rect.centerX(), -this.rect.centerY());
     }
 
     public applyTranslateOnly(X: CanvasRenderingContext2D): void {
@@ -62,8 +61,8 @@ export class Camera {
 
     public canvasToWorldPos(canvasPos: Vec2): Vec2 {
         return new Vec2M(
-            (canvasPos.x - this.rect.width / 2) / this.scale + this.pos.x,
-            (canvasPos.y - this.rect.height / 2) / this.scale + this.pos.y
+            (canvasPos.x - this.rect.width / 2) / this.scale + this.rect.centerX(),
+            (canvasPos.y - this.rect.height / 2) / this.scale + this.rect.centerY()
         );
     }
 
@@ -74,12 +73,9 @@ export class Camera {
 
     public tick() {
         if (this.attachee) {
-            this.pos.x = this.attachee.rect.centerX();
-            this.pos.y = this.attachee.rect.centerY();
+            this.rect.x = this.attachee.rect.centerX() - this.rect.width / 2;
+            this.rect.y = this.attachee.rect.centerY() - this.rect.height / 2;
         }
-
-        this.rect.x = this.pos.x - this.rect.width / 2;
-        this.rect.y = this.pos.y - this.rect.height / 2;
     }
 
     private resizeHandler() {
