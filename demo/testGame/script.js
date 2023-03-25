@@ -72,7 +72,8 @@ class DraggableSquare extends Square {
     constructor() {
         super();
         this.hold = false;
-        this.keyboardMovementEnabled = true;
+        this.removeComponent(this.keyboardMovement);
+        this.removeComponent(this.subscriptions);
         this.subscriptions.subscribe(engine.mouse.onMousedown, this.onMousedown);
         this.subscriptions.subscribe(engine.mouse.onMouseup, () => this.hold = false);
     }
@@ -80,10 +81,6 @@ class DraggableSquare extends Square {
     onMousedown() {
         if (this.rect.containsVec2(this.engine.mouse.worldPos)) {
             this.hold = true;
-            if (this.keyboardMovementEnabled) {
-                this.removeComponent(this.keyboardMovement);
-                this.keyboardMovementEnabled = false;
-            }
         }
     }
 
@@ -135,13 +132,15 @@ engine.htmlOverlay.elm.append(
         .attribute("style", "position: relative; color: red; top: 50px; left: 50px;")
 );
 
-const square1 = new DraggableSquare();
-engine.world.addElm(square1);
+const squares = [];
 
-const square2 = new DraggableSquare();
-square2.rect.x += 50;
-square2.rect.y += 50;
-engine.world.addElm(square2);
+for (let i = 0; i < 100; i++) {
+    const square = new DraggableSquare();
+    squares.push(square);
+    square.rect.x = Math.random() * 1000;
+    square.rect.y = Math.random() * 1000;
+    engine.world.addElm(square);
+}
 
 const square3 = new Square();
 square3.rect.x += 100;
@@ -152,8 +151,6 @@ engine.world.addElm(square3);
 requanf();
 
 console.log(engine);
-
-engine.camera.attachTo(square3);
 
 // todo: test
 // CollisionSystem

@@ -1,19 +1,25 @@
 import { Rectangle, RectangleM } from "../geometry/Rectangle.js";
 import { removeElmFromArray } from "../util/removeElmFromArray.js";
+import { QuadTree } from "./CircleQuadTree.js";
 import { CollisionReactionMap } from "./CollisionReactionMap.js";
 import { Hitbox } from "./Hitbox.js";
 
+const SLEEP_THRESHOLD = 0.0000005;
+
 export class CollisionSystem {
     public reactions = new CollisionReactionMap();
+    private quadTree = new QuadTree(10000);
 
     private hitboxes: Hitbox<any>[] = [];
 
-    public addHitbox(rectangle: Hitbox<any>) {
-        this.hitboxes.push(rectangle);
+    public addHitbox(hitbox: Hitbox<any>) {
+        this.hitboxes.push(hitbox);
+        this.quadTree.add(hitbox);
     }
 
-    public removeHitbox(rectangle: Hitbox<any>) {
-        removeElmFromArray(rectangle, this.hitboxes);
+    public removeHitbox(hitbox: Hitbox<any>) {
+        removeElmFromArray(hitbox, this.hitboxes);
+        this.quadTree.add(hitbox);
     }
 
     public getCollisionsWith(rectangle: Rectangle): Hitbox<any>[] {
@@ -26,17 +32,30 @@ export class CollisionSystem {
         return colliding;
     }
 
+    public __debugRenderQuadTree(X: CanvasRenderingContext2D) {
+        this.quadTree.__debugRender(X);
+    }
+
     public _checkCollisions() {
         const numHitboxes = this.hitboxes.length;
+        const sleepingArray = new Array(numHitboxes);
+        for (let i = 0; i < numHitboxes; i++) {
+            const hitbox = this.hitboxes[i];
+            sleepingArray[i] = hitbox.rectangle.sameWithinThreshold(hitbox._quadTreeRecord, SLEEP_THRESHOLD);
+            hitbox._collidedWith.length = 0;
+            if (!sleepingArray[i]) {
+                this.quadTree.updateSingle(hitbox);
+            }
+        }
 
         for (let i = 0; i < numHitboxes; i++) {
-            const rect1 = this.hitboxes[i].rectangle;
-
-            for (let j = i + 1; j < numHitboxes; j++) {
-                const rect2 = this.hitboxes[j].rectangle;
-
-                if (RectangleM.isColliding(rect1, rect2)) {
-                    this.reactions.triggerReaction(this.hitboxes[i], this.hitboxes[j]);
+            const hitbox = this.hitboxes[i];
+            if (sleepingArray[i]) { continue; }
+            const collisions = this.quadTree.query(hitbox.rectangle);
+            for (const collision of collisions) {
+                if (collision !== hitbox && !collision._collidedWith.includes(hitbox)) {
+                    this.reactions.triggerReaction(hitbox, collision);
+                    hitbox._collidedWith.push(collision);
                 }
             }
         }

@@ -1,38 +1,26 @@
+import { Rectangle, RectangleM } from "../geometry/Rectangle.js";
 import { Vec2M } from "../geometry/Vec2.js";
-
-
-// --- quadtree circle collider
-interface IEntity {
-    radius: number;
-    x: number;
-    y: number;
-    vx: number;
-    vy: number;
-
-    _quadTreeX: number;
-    _quadTreeY: number;
-    _collisionObj?: IEntity;
-    _canSleep: boolean;
-    _sleeping: boolean;
-}
+import { Collidable, Hitbox } from "./Hitbox.js";
 
 /**
  * The root of a quad tree implementation that checks for
  * collisions with circles
  */
-class CircleQuadTree<T extends IEntity> implements QuadTreeChild<T> {
+class QuadTree implements QuadTreeChild {
     private static leafMax = 6;
     private static branchMin = 6;
-    private static maxDepth = 8;
 
-    public elements: T[];
+    public elements: Hitbox<Collidable>[];
     public elementCount: number;
 
     /** Quadrants [I (++), II (-+), III (--), IV(+-)] */
-    public children: QuadTreeChild<T>[] | null;
+    public children: QuadTreeChild[] | null;
 
     private halfSize: number;
 
+    /**
+     * @param size max width and height of the quad tree
+     */
     constructor(size: number) {
         this.elements = [];
         this.elementCount = 0;
@@ -41,21 +29,15 @@ class CircleQuadTree<T extends IEntity> implements QuadTreeChild<T> {
         this.halfSize = size / 2;
     }
 
-    public addAll(objs: T[]): void {
-        for (const obj of objs) {
-            this.add(obj);
-        }
-    }
+    public add(obj: Hitbox<Collidable>): void {
+        const x = obj.rectangle.x;
+        const y = obj.rectangle.y;
+        const rightX = obj.rectangle.rightX();
+        const bottomY = obj.rectangle.bottomY();
 
-    public add(obj: T): void {
-        const x = obj.x;
-        const y = obj.y;
-        const radius = obj.radius;
+        obj._quadTreeRecord.copy(obj.rectangle);
 
-        obj._quadTreeX = x;
-        obj._quadTreeY = y;
-
-        let that: QuadTreeChild<T> = this;
+        let currTree: QuadTreeChild = this;
         let cx: number = this.halfSize;
         let cy: number = this.halfSize;
         let qSize: number = this.halfSize / 2;
@@ -64,58 +46,58 @@ class CircleQuadTree<T extends IEntity> implements QuadTreeChild<T> {
 
         while (true) {
             eSize = qSize / 2;
-            that.elementCount++;
+            currTree.elementCount++;
             // depth++;
 
-            if (that.children === null) {
+            if (currTree.children === null) {
                 // add to leaf
-                that.elements.push(obj);
-                if (that.elementCount > CircleQuadTree.leafMax) {
-                    this.growLeaf(that, cx, cy);
+                currTree.elements.push(obj);
+                if (currTree.elementCount > QuadTree.leafMax) {
+                    this.growLeaf(currTree, cx, cy);
                 }
                 break;
             } else {
                 if (y > cy) {
                     if (x > cx) {
-                        if (x - radius >= cx && y - radius >= cy) {
-                            that = that.children[0];
+                        if (x >= cx && y >= cy) {
+                            currTree = currTree.children[0];
                             cx += qSize;
                             cy += qSize;
                             qSize = eSize;
                         } else {
-                            that.elements.push(obj); // put on branch if can't fully fit in leaf
+                            currTree.elements.push(obj); // put on branch if can't fully fit in leaf
                             break;
                         }
                     } else {
-                        if (x + radius <= cx && y - radius >= cy) {
-                            that = that.children[1];
+                        if (rightX <= cx && y >= cy) {
+                            currTree = currTree.children[1];
                             cx -= qSize;
                             cy += qSize;
                             qSize = eSize;
                         } else {
-                            that.elements.push(obj);
+                            currTree.elements.push(obj);
                             break;
                         }
                     }
                 } else {
                     if (x > cx) {
-                        if (x - radius >= cx && y + radius <= cy) {
-                            that = that.children[3];
+                        if (x >= cx && bottomY <= cy) {
+                            currTree = currTree.children[3];
                             cx += qSize;
                             cy -= qSize;
                             qSize = eSize;
                         } else {
-                            that.elements.push(obj);
+                            currTree.elements.push(obj);
                             break;
                         }
                     } else {
-                        if (x + radius <= cx && y + radius <= cy) {
-                            that = that.children[2];
+                        if (rightX <= cx && bottomY <= cy) {
+                            currTree = currTree.children[2];
                             cx -= qSize;
                             cy -= qSize;
                             qSize = eSize;
                         } else {
-                            that.elements.push(obj);
+                            currTree.elements.push(obj);
                             break;
                         }
                     }
@@ -127,24 +109,26 @@ class CircleQuadTree<T extends IEntity> implements QuadTreeChild<T> {
     /**
      * Update single element in tree
      */
-    public updateSingle(obj: T): void {
-        const qtX = obj._quadTreeX;
-        const qtY = obj._quadTreeY;
-        const newX = obj.x;
-        const newY = obj.y;
-        const radius = obj.radius;
+    public updateSingle(obj: Hitbox<Collidable>): void {
+        const qtX = obj._quadTreeRecord.x;
+        const qtY = obj._quadTreeRecord.y;
+        const qtRightX = obj._quadTreeRecord.rightX();
+        const qtBottomY = obj._quadTreeRecord.bottomY();
+        const newX = obj.rectangle.x;
+        const newY = obj.rectangle.y;
+        const newBottomY = obj.rectangle.bottomY();
+        const newRightX = obj.rectangle.rightX();
 
-        obj._quadTreeX = newX;
-        obj._quadTreeY = newY;
+        obj._quadTreeRecord.copy(obj.rectangle);
 
         // keep track of "stack"
         /** [child, cx, cy, halfSize of child] */
-        const treeStack: [QuadTreeChild<T>, number, number, number][] = [];
+        const treeStack: [QuadTreeChild, number, number, number][] = [];
 
-        let lowBranch: QuadTreeChild<T> | undefined;
+        let lowBranch: QuadTreeChild | undefined;
 
         let found = false;
-        let that: QuadTreeChild<T> = this;
+        let that: QuadTreeChild = this;
         let cx: number = this.halfSize;
         let cy: number = this.halfSize;
         let qSize: number = this.halfSize / 2;
@@ -163,6 +147,7 @@ class CircleQuadTree<T extends IEntity> implements QuadTreeChild<T> {
 
             treeStack.push([that, cx, cy, qSize]);
 
+            // ------------ code below can probably be optimized
             // if wasn't found in elements, go one level deeper
             if (that.children === null) {
                 break; // end of tree
@@ -205,17 +190,17 @@ class CircleQuadTree<T extends IEntity> implements QuadTreeChild<T> {
         while (true) {
             const hSize = qSize * 2;
             if (
-                cx - hSize < newX - radius &&
-                cx + hSize > newX + radius &&
-                cy - hSize < newY - radius &&
-                cy + hSize > newY + radius
+                cx - hSize < newX &&
+                cx + hSize > newRightX &&
+                cy - hSize < newY &&
+                cy + hSize > newBottomY
             ) {
                 // can fit
                 break;
             }
 
 
-            if (!lowBranch && that.elementCount < CircleQuadTree.branchMin) {
+            if (!lowBranch && that.elementCount < QuadTree.branchMin) {
                 lowBranch = that;
             }
 
@@ -240,14 +225,14 @@ class CircleQuadTree<T extends IEntity> implements QuadTreeChild<T> {
             if (that.children === null) {
                 // add to leaf
                 that.elements.push(obj);
-                if (that.elementCount > CircleQuadTree.leafMax) {
+                if (that.elementCount > QuadTree.leafMax) {
                     this.growLeaf(that, cx, cy);
                 }
                 break;
             } else {
                 if (newY > cy) {
                     if (newX > cx) {
-                        if (newX - radius >= cx && newY - radius >= cy) {
+                        if (newX >= cx && newY >= cy) {
                             that = that.children[0];
                             cx += qSize;
                             cy += qSize;
@@ -257,7 +242,7 @@ class CircleQuadTree<T extends IEntity> implements QuadTreeChild<T> {
                             break;
                         }
                     } else {
-                        if (newX + radius <= cx && newY - radius >= cy) {
+                        if (newRightX <= cx && newY >= cy) {
                             that = that.children[1];
                             cx -= qSize;
                             cy += qSize;
@@ -269,7 +254,7 @@ class CircleQuadTree<T extends IEntity> implements QuadTreeChild<T> {
                     }
                 } else {
                     if (newX > cx) {
-                        if (newX - radius >= cx && newY + radius <= cy) {
+                        if (newX >= cx && newBottomY <= cy) {
                             that = that.children[3];
                             cx += qSize;
                             cy -= qSize;
@@ -279,7 +264,7 @@ class CircleQuadTree<T extends IEntity> implements QuadTreeChild<T> {
                             break;
                         }
                     } else {
-                        if (newX + radius <= cx && newY + radius <= cy) {
+                        if (newRightX <= cx && newBottomY <= cy) {
                             that = that.children[2];
                             cx -= qSize;
                             cy -= qSize;
@@ -298,13 +283,13 @@ class CircleQuadTree<T extends IEntity> implements QuadTreeChild<T> {
         }
     }
 
-    public remove(obj: T): void {
-        const x = obj._quadTreeX;
-        const y = obj._quadTreeY;
+    public remove(obj: Hitbox<Collidable>): void {
+        const x = obj._quadTreeRecord.x;
+        const y = obj._quadTreeRecord.y;
 
-        let lowBranch: QuadTreeChild<T> | undefined;
+        let lowBranch: QuadTreeChild | undefined;
 
-        let that: QuadTreeChild<T> = this;
+        let that: QuadTreeChild = this;
         let cx: number = this.halfSize;
         let cy: number = this.halfSize;
         let qSize: number = this.halfSize / 2;
@@ -327,7 +312,7 @@ class CircleQuadTree<T extends IEntity> implements QuadTreeChild<T> {
             if (that.children === null) {
                 throw new Error("Could not find obj for removal");
             } else {
-                if (!lowBranch && that.elementCount < CircleQuadTree.branchMin) {
+                if (!lowBranch && that.elementCount < QuadTree.branchMin) {
                     lowBranch = that;
                 }
 
@@ -360,12 +345,16 @@ class CircleQuadTree<T extends IEntity> implements QuadTreeChild<T> {
         }
     }
 
-    public queryOne(x: number, y: number, radius: number, exclude?: T): T | undefined {
+    public queryOne(rectangle: Rectangle, exclude?: Hitbox<Collidable>): Hitbox<Collidable> | undefined {
         // possible optimization: check if query only collides with 3 quadrants
+        const x = rectangle.x;
+        const y = rectangle.y;
+        const width = rectangle.width;
+        const height = rectangle.height;
 
         // as an alternative to recursive
         /** [child, cx, cy, halfSize of child] */
-        const que: [QuadTreeChild<T>, number, number, number][] = [
+        const que: [QuadTreeChild, number, number, number][] = [
             [this, this.halfSize, this.halfSize, this.halfSize / 2]
         ];
 
@@ -382,27 +371,27 @@ class CircleQuadTree<T extends IEntity> implements QuadTreeChild<T> {
                 if (y > cy) {
                     if (x > cx) {
                         que.push([that.children[0], cx + qSize, cy + qSize, eSize]);
-                        if (x - radius < cx) {
+                        if (x < cx) {
                             que.push([that.children[1], cx - qSize, cy + qSize, eSize]);
-                            if (y - radius < cy) {
+                            if (y < cy) {
                                 que.push([that.children[2], cx - qSize, cy - qSize, eSize]);
                                 que.push([that.children[3], cx + qSize, cy - qSize, eSize]);
                             }
                         } else {
-                            if (y - radius < cy) {
+                            if (y < cy) {
                                 que.push([that.children[3], cx + qSize, cy - qSize, eSize]);
                             }
                         }
                     } else {
                         que.push([that.children[1], cx - qSize, cy + qSize, eSize]);
-                        if (x + radius > cx) {
+                        if (x + width > cx) {
                             que.push([that.children[0], cx + qSize, cy + qSize, eSize]);
-                            if (y - radius < cy) {
+                            if (y < cy) {
                                 que.push([that.children[2], cx - qSize, cy - qSize, eSize]);
                                 que.push([that.children[3], cx + qSize, cy - qSize, eSize]);
                             }
                         } else {
-                            if (y - radius < cy) {
+                            if (y < cy) {
                                 que.push([that.children[2], cx - qSize, cy - qSize, eSize]);
                             }
                         }
@@ -410,27 +399,27 @@ class CircleQuadTree<T extends IEntity> implements QuadTreeChild<T> {
                 } else {
                     if (x > cx) {
                         que.push([that.children[3], cx + qSize, cy - qSize, eSize]);
-                        if (x - radius < cx) {
+                        if (x < cx) {
                             que.push([that.children[2], cx - qSize, cy - qSize, eSize]);
-                            if (y + radius > cy) {
+                            if (y + height > cy) {
                                 que.push([that.children[0], cx + qSize, cy + qSize, eSize]);
                                 que.push([that.children[1], cx - qSize, cy + qSize, eSize]);
                             }
                         } else {
-                            if (y + radius > cy) {
+                            if (y + height > cy) {
                                 que.push([that.children[0], cx + qSize, cy + qSize, eSize]);
                             }
                         }
                     } else {
                         que.push([that.children[2], cx - qSize, cy - qSize, eSize]);
-                        if (x + radius > cx) {
+                        if (x + width > cx) {
                             que.push([that.children[3], cx + qSize, cy - qSize, eSize]);
-                            if (y + radius > cy) {
+                            if (y + height > cy) {
                                 que.push([that.children[0], cx + qSize, cy + qSize, eSize]);
                                 que.push([that.children[1], cx - qSize, cy + qSize, eSize]);
                             }
                         } else {
-                            if (y + radius > cy) {
+                            if (y + height > cy) {
                                 que.push([that.children[1], cx - qSize, cy + qSize, eSize]);
                             }
                         }
@@ -441,27 +430,28 @@ class CircleQuadTree<T extends IEntity> implements QuadTreeChild<T> {
             for (let i = that.elements.length - 1; i >= 0; i--) {
                 if (that.elements[i] === exclude) { continue; }
 
-                const element = that.elements[i];
-                const dx = element.x - x;
-                const dy = element.y - y;
-                const r = element.radius + radius;
+                const element = that.elements[i].rectangle;
 
-                if (dx * dx + dy * dy < r * r) {
-                    return element;
+                if (RectangleM.isColliding(element, rectangle)) {
+                    return that.elements[i];
                 }
             }
         }
     }
 
-    public query(x: number, y: number, radius: number): T[] {
+    public query(rectangle: Rectangle): Hitbox<Collidable>[] {
         // possible optimization: check if query only collides with 3 quadrants
+        const x = rectangle.x;
+        const y = rectangle.y;
+        const width = rectangle.width;
+        const height = rectangle.height;
 
         // as an alternative to recursive
         /** [child, cx, cy, halfSize of child] */
-        const que: [QuadTreeChild<T>, number, number, number][] = [
+        const que: [QuadTreeChild, number, number, number][] = [
             [this, this.halfSize, this.halfSize, this.halfSize / 2]
         ];
-        const entities: T[] = [];
+        const entities: Hitbox<Collidable>[] = [];
 
         let queItem;
         while (queItem = que.pop()) {
@@ -476,27 +466,27 @@ class CircleQuadTree<T extends IEntity> implements QuadTreeChild<T> {
                 if (y > cy) {
                     if (x > cx) {
                         que.push([that.children[0], cx + qSize, cy + qSize, eSize]);
-                        if (x - radius < cx) {
+                        if (x < cx) {
                             que.push([that.children[1], cx - qSize, cy + qSize, eSize]);
-                            if (y - radius < cy) {
+                            if (y < cy) {
                                 que.push([that.children[2], cx - qSize, cy - qSize, eSize]);
                                 que.push([that.children[3], cx + qSize, cy - qSize, eSize]);
                             }
                         } else {
-                            if (y - radius < cy) {
+                            if (y < cy) {
                                 que.push([that.children[3], cx + qSize, cy - qSize, eSize]);
                             }
                         }
                     } else {
                         que.push([that.children[1], cx - qSize, cy + qSize, eSize]);
-                        if (x + radius > cx) {
+                        if (x + width > cx) {
                             que.push([that.children[0], cx + qSize, cy + qSize, eSize]);
-                            if (y - radius < cy) {
+                            if (y < cy) {
                                 que.push([that.children[2], cx - qSize, cy - qSize, eSize]);
                                 que.push([that.children[3], cx + qSize, cy - qSize, eSize]);
                             }
                         } else {
-                            if (y - radius < cy) {
+                            if (y < cy) {
                                 que.push([that.children[2], cx - qSize, cy - qSize, eSize]);
                             }
                         }
@@ -504,27 +494,27 @@ class CircleQuadTree<T extends IEntity> implements QuadTreeChild<T> {
                 } else {
                     if (x > cx) {
                         que.push([that.children[3], cx + qSize, cy - qSize, eSize]);
-                        if (x - radius < cx) {
+                        if (x < cx) {
                             que.push([that.children[2], cx - qSize, cy - qSize, eSize]);
-                            if (y + radius > cy) {
+                            if (y + height > cy) {
                                 que.push([that.children[0], cx + qSize, cy + qSize, eSize]);
                                 que.push([that.children[1], cx - qSize, cy + qSize, eSize]);
                             }
                         } else {
-                            if (y + radius > cy) {
+                            if (y + height > cy) {
                                 que.push([that.children[0], cx + qSize, cy + qSize, eSize]);
                             }
                         }
                     } else {
                         que.push([that.children[2], cx - qSize, cy - qSize, eSize]);
-                        if (x + radius > cx) {
+                        if (x + width > cx) {
                             que.push([that.children[3], cx + qSize, cy - qSize, eSize]);
-                            if (y + radius > cy) {
+                            if (y + height > cy) {
                                 que.push([that.children[0], cx + qSize, cy + qSize, eSize]);
                                 que.push([that.children[1], cx - qSize, cy + qSize, eSize]);
                             }
                         } else {
-                            if (y + radius > cy) {
+                            if (y + height > cy) {
                                 que.push([that.children[1], cx - qSize, cy + qSize, eSize]);
                             }
                         }
@@ -532,14 +522,12 @@ class CircleQuadTree<T extends IEntity> implements QuadTreeChild<T> {
                 }
             }
 
-            for (let i = that.elements.length - 1; i >= 0; i--) {
-                const element = that.elements[i];
-                const dx = element.x - x;
-                const dy = element.y - y;
-                const r = element.radius + radius;
 
-                if (dx * dx + dy * dy < r * r) {
-                    entities.push(element);
+            for (let i = that.elements.length - 1; i >= 0; i--) {
+                const element = that.elements[i].rectangle;
+
+                if (RectangleM.isColliding(element, rectangle)) {
+                    entities.push(that.elements[i]);
                 }
             }
         }
@@ -551,7 +539,7 @@ class CircleQuadTree<T extends IEntity> implements QuadTreeChild<T> {
      * Querys a rectangle in the quadtree without checking if the
      * entities actually collide with the given rectangle
      */
-    public rectQueryNoVerify(x_: number, y_: number, width_: number, height_: number): T[] {
+    public rectQueryNoVerify(x_: number, y_: number, width_: number, height_: number): Hitbox<Collidable>[] {
         const x = x_ + width_ / 2;
         const y = y_ + height_ / 2;
         const hwidth = width_ / 2;
@@ -561,7 +549,7 @@ class CircleQuadTree<T extends IEntity> implements QuadTreeChild<T> {
 
         // as an alternative to recursive
         /** [child, cx, cy, halfSize of child] */
-        const que: [QuadTreeChild<T>, number, number, number][] = [
+        const que: [QuadTreeChild, number, number, number][] = [
             [this, this.halfSize, this.halfSize, this.halfSize / 2]
         ];
 
@@ -643,7 +631,7 @@ class CircleQuadTree<T extends IEntity> implements QuadTreeChild<T> {
         return elms;
     }
 
-    public debugRender(X: CanvasRenderingContext2D): void {
+    public __debugRender(X: CanvasRenderingContext2D): void {
         X.save();
         X.strokeStyle = "#ff8888";
         X.font = "bold 16px Arial";
@@ -653,7 +641,7 @@ class CircleQuadTree<T extends IEntity> implements QuadTreeChild<T> {
 
         // as an alternative to recursive
         /** [child, cx, cy, halfSize of child] */
-        const que: [QuadTreeChild<T>, number, number, number][] = [
+        const que: [QuadTreeChild, number, number, number][] = [
             [this, this.halfSize, this.halfSize, this.halfSize / 2]
         ];
 
@@ -686,7 +674,7 @@ class CircleQuadTree<T extends IEntity> implements QuadTreeChild<T> {
         X.restore();
     }
 
-    private growLeaf(that: QuadTreeChild<T>, cx: number, cy: number): void {
+    private growLeaf(that: QuadTreeChild, cx: number, cy: number): void {
         // grow the leaf into a branch
         that.children = [
             createQuadTreeChild(),
@@ -701,20 +689,21 @@ class CircleQuadTree<T extends IEntity> implements QuadTreeChild<T> {
         // put elements into the leaves
         for (let i = oldElements.length - 1; i >= 0; i--) {
             const element = oldElements[i];
-            const x = element._quadTreeX;
-            const y = element._quadTreeY;
-            const radius = element.radius;
+            const x = element._quadTreeRecord.x;
+            const y = element._quadTreeRecord.y;
+            const rightX = element._quadTreeRecord.rightX();
+            const bottomY = element._quadTreeRecord.bottomY();
 
             if (y > cy) {
                 if (x > cx) {
-                    if (x - radius >= cx && y - radius >= cy) {
+                    if (x >= cx && y >= cy) {
                         that.children[0].elements.push(element);
                         that.children[0].elementCount++;
                     } else {
                         that.elements.push(element); // put on branch if can't fully fit in new leaf
                     }
                 } else {
-                    if (x + radius <= cx && y - radius >= cy) {
+                    if (rightX <= cx && y >= cy) {
                         that.children[1].elements.push(element);
                         that.children[1].elementCount++;
                     } else {
@@ -723,14 +712,14 @@ class CircleQuadTree<T extends IEntity> implements QuadTreeChild<T> {
                 }
             } else {
                 if (x > cx) {
-                    if (x - radius >= cx && y + radius <= cy) {
+                    if (x >= cx && bottomY <= cy) {
                         that.children[3].elements.push(element);
                         that.children[3].elementCount++;
                     } else {
                         that.elements.push(element);
                     }
                 } else {
-                    if (x + radius <= cx && y + radius <= cy) {
+                    if (rightX <= cx && bottomY <= cy) {
                         that.children[2].elements.push(element);
                         that.children[2].elementCount++;
                     } else {
@@ -741,9 +730,9 @@ class CircleQuadTree<T extends IEntity> implements QuadTreeChild<T> {
         }
     }
 
-    private mergeBranch(branch: QuadTreeChild<T>): void {
-        const elements: T[] = [];
-        const que: QuadTreeChild<T>[] = [branch];
+    private mergeBranch(branch: QuadTreeChild): void {
+        const elements: Hitbox<Collidable>[] = [];
+        const que: QuadTreeChild[] = [branch];
 
         let curr;
         while (curr = que.pop()) {
@@ -764,7 +753,7 @@ class CircleQuadTree<T extends IEntity> implements QuadTreeChild<T> {
     }
 }
 
-function createQuadTreeChild<T>(): QuadTreeChild<T> {
+function createQuadTreeChild(): QuadTreeChild {
     return {
         elements: [],
         children: null,
@@ -772,72 +761,10 @@ function createQuadTreeChild<T>(): QuadTreeChild<T> {
     };
 }
 
-interface QuadTreeChild<T> {
-    elements: T[];
-    children: QuadTreeChild<T>[] | null;
+interface QuadTreeChild {
+    elements: Hitbox<Collidable>[];
+    children: QuadTreeChild[] | null;
     elementCount: number;
 }
 
-export default CircleQuadTree;
-
-
-const SLEEP_THRESHOLD = 0.0005;
-
-class Sleeper {
-    public sleepAll(entities: IEntity[]) {
-        for (const entity of entities) {
-            entity._sleeping =
-                entity._canSleep &&
-                Math.abs(entity.vx) + Math.abs(entity.vy) < SLEEP_THRESHOLD;
-        }
-    }
-}
-
-interface Collidable extends IEntity {
-    _collisionObj: any;
-    _sleeping: boolean;
-    x: number;
-    y: number;
-    radius: number;
-    collideWith: any;
-}
-
-class CircleCollider<T extends Collidable> {
-    public quadTree!: CircleQuadTree<T>;
-
-    public collideAll(entities: T[]): void {
-        for (const entity of entities) {
-            entity._collisionObj = undefined;
-            if (entity._sleeping) { continue; }
-            this.quadTree.updateSingle(entity);
-        }
-
-        for (let i = 0; i < entities.length; i++) {
-            const entity = entities[i];
-            if (entity._sleeping) { continue; }
-            const other = this.quadTree.queryOne(entity.x, entity.y, entity.radius, entity);
-            if (other) {
-                if (other._collisionObj !== entity) {
-                    entity.collideWith(other);
-                    entity._collisionObj = other;
-                }
-            }
-        }
-    }
-
-    public setBoundaries(boundaries: Vec2M): void {
-        this.quadTree = new CircleQuadTree(Math.max(boundaries.x, boundaries.y));
-    }
-
-    public getQuadTree(): CircleQuadTree<T> {
-        return this.quadTree;
-    }
-
-    public newEntity(collidable: T): void {
-        this.quadTree.add(collidable);
-    }
-
-    public removeEntity(entity: T): void {
-        this.quadTree.remove(entity);
-    }
-}
+export { QuadTree };
