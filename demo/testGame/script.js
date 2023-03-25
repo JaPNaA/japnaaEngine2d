@@ -8,7 +8,10 @@ const engine = new JaPNaAEngine2d({
         sizing: 'fit',
         dpr: 'oneToOne'
     },
-    mouseInCollisionSystem: true
+    mouseInCollisionSystem: true,
+    htmlOverlay: {
+        relativeToWorld: true
+    }
 });
 
 class Square extends WorldElmWithComponents {
@@ -16,7 +19,6 @@ class Square extends WorldElmWithComponents {
         super();
 
         this.collisionType = Square.collisionType;
-        engine.collisions.addHitbox(new Hitbox(this.rect, this));
         this.color = "#fff";
 
         this.subscriptions = this.addComponent(new SubscriptionsComponent());
@@ -31,6 +33,11 @@ class Square extends WorldElmWithComponents {
         this.subscriptions.subscribe(engine.keyboard.getKeydownBus(["Escape", "KeyC"]), this.remove);
 
         this.keyboardMovement = this.addComponent(new KeyboardMovementComponent());
+    }
+
+    _setEngine(engine) {
+        super._setEngine(engine);
+        this.engine.collisions.addHitbox(new Hitbox(this.rect, this));
     }
 
     resetX() {
@@ -67,13 +74,11 @@ class DraggableSquare extends Square {
         this.hold = false;
         this.keyboardMovementEnabled = true;
         this.subscriptions.subscribe(engine.mouse.onMousedown, this.onMousedown);
-        this.subscriptions.subscribe(engine.mouse.onMousemove, this.onMousemove);
         this.subscriptions.subscribe(engine.mouse.onMouseup, () => this.hold = false);
     }
 
     onMousedown() {
-        const canvasPos = this.engine.canvas.screenPosToCanvasPos(this.engine.mouse.screenPos);
-        if (this.rect.containsVec2(canvasPos)) {
+        if (this.rect.containsVec2(this.engine.mouse.worldPos)) {
             this.hold = true;
             if (this.keyboardMovementEnabled) {
                 this.removeComponent(this.keyboardMovement);
@@ -82,11 +87,11 @@ class DraggableSquare extends Square {
         }
     }
 
-    onMousemove() {
+    tick() {
+        super.tick();
         if (!this.hold) { return; }
-        const canvasPos = this.engine.canvas.screenPosToCanvasPos(this.engine.mouse.screenPos);
-        this.rect.x = canvasPos.x;
-        this.rect.y = canvasPos.y;
+        this.rect.x = this.engine.mouse.worldPos.x;
+        this.rect.y = this.engine.mouse.worldPos.y;
     }
 }
 
@@ -99,6 +104,8 @@ function requanf() {
 
     engine.draw();
 
+    engine.camera.scale += (targetScale - engine.camera.scale) / 10;
+
     const X = engine.canvas.X;
     X.strokeStyle = "#f00";
     X.lineWidth = 4;
@@ -108,6 +115,19 @@ function requanf() {
 
     requestAnimationFrame(requanf);
 }
+
+let zoomedIn = false;
+let targetScale = 1;
+
+setInterval(() => {
+    if (zoomedIn) {
+        targetScale = 1;
+        zoomedIn = false;
+    } else {
+        targetScale = 1.2;
+        zoomedIn = true;
+    }
+}, 750);
 
 
 engine.htmlOverlay.elm.append(
@@ -133,8 +153,8 @@ requanf();
 
 console.log(engine);
 
+engine.camera.attachTo(square3);
+
 // todo: test
-// MouseInput (with and without collision)
-// Camera
 // CollisionSystem
 // Ticker
