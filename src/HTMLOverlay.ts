@@ -1,7 +1,10 @@
 import { CanvasSizer } from "./CanvasSizer.js";
 import { Component } from "./elements.js";
+import { Vec2, Vec2M } from "./geometry/Vec2.js";
 
 export class HTMLOverlay extends Component {
+    public _screenToWorldPos: (v2: Vec2) => Vec2 = x => x;
+
     constructor(private options: Required<HTMLOverlayOptions>, private sizer: CanvasSizer) {
         super("HTMLOverlay");
 
@@ -9,23 +12,40 @@ export class HTMLOverlay extends Component {
         this.elm.on("keydown", e => e.stopPropagation());
         this.elm.on("keyup", e => e.stopPropagation());
 
-        this.sizer.onResize.subscribe(() => this.updateSizes());
-        this.updateSizes();
+        this.sizer.onResize.subscribe(() => this.updateTransform());
+        this.updateTransform();
     }
 
-    private updateSizes() {
+    public tick() {
+        if (this.options.relativeToWorld) {
+            this.updateTransform();
+        }
+    }
+
+    private updateTransform() {
         const elm = this.elm.getHTMLElement();
         // note: this implementation is problematic because the correct behaviour of
         // stick relies on `{ scale: true }`
-        // this implementation doesn't handle high dpr correctly, and is not tested with all the
-        // different types of sizings provided by the sizer
-        if (this.options.stick) { 
-            elm.style.left = this.sizer.offset.x + "px";
-            elm.style.top = this.sizer.offset.y + "px";
-        }
-        if (this.options.scale) {
-            elm.style.transformOrigin = "0 0";
-            elm.style.transform = "scale(" + this.sizer.scaling + ")";
+        if (this.options.relativeToWorld) {
+            const offset = this._screenToWorldPos(new Vec2M(0, 0));
+            const scale = Vec2M.subtract(this._screenToWorldPos(new Vec2M(1, 1)), offset);
+            if (this.options.stick) {
+                elm.style.left = -offset.x / scale.x + "px";
+                elm.style.top = -offset.y / scale.y + "px";
+            }
+            if (this.options.scale) {
+                elm.style.transformOrigin = "0 0";
+                elm.style.transform = "scale(" + (1 / scale.x) + ", " + (1 / scale.y) + ")";
+            }
+        } else {
+            if (this.options.stick) {
+                elm.style.left = this.sizer.offset.x + "px";
+                elm.style.top = this.sizer.offset.y + "px";
+            }
+            if (this.options.scale) {
+                elm.style.transformOrigin = "0 0";
+                elm.style.transform = "scale(" + this.sizer.scaling + ")";
+            }
         }
     }
 }
@@ -43,4 +63,14 @@ export interface HTMLOverlayOptions {
      * default: true
      */
     scale?: boolean;
+    /**
+     * Should the HTMLOverlay be positioned in the engine's world? / Does the
+     * camera effect the HTMLOverlay?
+     * 
+     *   - false -> The elements do not move when the camera moves
+     *   - true -> The elements move when the camera moves
+     * 
+     * default: false
+     */
+    relativeToWorld?: boolean;
 }

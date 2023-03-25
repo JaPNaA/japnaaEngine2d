@@ -8,6 +8,13 @@ export abstract class MouseInput {
     public leftDown = false;
     public rightDown = false;
     public screenPos: Vec2M = new Vec2M(0, 0);
+    public worldPos: Vec2M = new Vec2M(0, 0);
+
+    /**
+     * Function that transforms from screen to world position. If left unset,
+     * does not do anything.
+     */
+    public _screenToWorldPos: (screenPos: Vec2) => Vec2 = x => x;
 
     public onMouseup = new EventBus<MouseEvent>();
     public onMousedown = new EventBus<MouseEvent>();
@@ -23,6 +30,12 @@ export abstract class MouseInput {
         addEventListener("mousedown", this.mousedownHandler);
         addEventListener("mousemove", this.mousemoveHandler);
         addEventListener("contextmenu", this.contextmenuHandler);
+    }
+
+    public tick() {
+        const worldPos = this._screenToWorldPos(this.screenPos);
+        this.worldPos.x = worldPos.x;
+        this.worldPos.y = worldPos.y;
     }
 
     public _dispose() {
@@ -53,6 +66,7 @@ export abstract class MouseInput {
     protected mousemoveHandler(event: MouseEvent) {
         this.screenPos.x = event.clientX;
         this.screenPos.y = event.clientY;
+
         this.onMousemove.send(event);
     }
 
@@ -65,22 +79,16 @@ export class MouseInputWithCollision extends MouseInput implements Collidable {
     public readonly collisionType: symbol = Symbol();
     public hitbox: Hitbox<MouseInputWithCollision>;
     public rect: RectangleM = new RectangleM(0, 0, 0, 0);
-    /**
-     * Function that transforms from screen to world position. If left unset,
-     * does not do anything.
-     */
-    public transformToWorldPos: (screenPos: Vec2) => Vec2 = x => x;
 
     constructor() {
         super();
         this.hitbox = new Hitbox(this.rect, this);
     }
 
-    protected mousemoveHandler(event: MouseEvent): void {
-        super.mousemoveHandler(event);
-        const worldPos = this.transformToWorldPos(this.screenPos);
-        this.rect.x = worldPos.x;
-        this.rect.y = worldPos.y;
+    public tick(): void {
+        super.tick();
+        this.rect.x = this.worldPos.x;
+        this.rect.y = this.worldPos.y;
     }
 }
 

@@ -13,6 +13,7 @@ import { Ticker } from "./Ticker.js";
 import { World } from "./World.js";
 import { KeyboardMovementComponent } from "./canvasElm/components/KeyboardMovementComponent.js";
 import { WorldElmWithComponents } from "./canvasElm/WorldElmWithComponents.js";
+import { Vec2 } from "./geometry/Vec2.js";
 
 export class JaPNaAEngine2d {
     /** Keyboard input */
@@ -74,9 +75,11 @@ export class JaPNaAEngine2d {
         this.world = new World(this);
         this.ticker = new Ticker(this);
 
+        const screenToWorldPos = (screenPos: Vec2) => this.camera.canvasToWorldPos(this.canvas.screenPosToCanvasPos(screenPos));
+        this.htmlOverlay._screenToWorldPos = this.mouse._screenToWorldPos = screenToWorldPos;
+
         if (this.options.mouseInCollisionSystem) {
             const mouse = this.mouse as MouseInputWithCollision;
-            mouse.transformToWorldPos = screenPos => this.canvas.screenPosToCanvasPos(screenPos);
             this.collisions.addHitbox(mouse.hitbox);
         }
 
@@ -97,12 +100,15 @@ export class JaPNaAEngine2d {
 
     // todo: make private
     public tick() {
+        this.mouse.tick();
         this.ticker.tickAll(this.world.getElms());
     }
 
     // todo: make private
     public draw() {
         const X = this.canvas.X;
+        this.camera.tick();
+        this.htmlOverlay.tick();
 
         X.clearRect(0, 0, this.canvas.width, this.canvas.height);
 
@@ -156,7 +162,8 @@ const defaultCanvasOptions: Required<CanvasOptions> = {
  */
 const defaultHTMLOverlayOptions: Required<HTMLOverlayOptions> = {
     scale: true,
-    stick: true
+    stick: true,
+    relativeToWorld: false
 };
 
 /**

@@ -1,7 +1,7 @@
 import { WorldElm } from "./canvasElm/WorldElm.js";
 import { CanvasSizer } from "./CanvasSizer.js";
 import { RectangleM } from "./geometry/Rectangle.js";
-import { Vec2M } from "./geometry/Vec2.js";
+import { Vec2, Vec2M } from "./geometry/Vec2.js";
 
 export class Camera {
     public rect = new RectangleM(0, 0, 1, 1);
@@ -15,9 +15,9 @@ export class Camera {
     constructor(private sizer: CanvasSizer) {
         this.tScale = this.scale = 1;
         this.sizer.onResize.subscribe(() => {
-            this.rect.width = sizer.width;
-            this.rect.height = sizer.height;
+            this.resizeHandler();
         });
+        this.resizeHandler();
         this.tick();
     }
 
@@ -51,12 +51,20 @@ export class Camera {
     }
 
     public applyTransform(X: CanvasRenderingContext2D): void {
-        X.translate(-this.rect.x, -this.rect.y);
+        X.translate(this.rect.width / 2, this.rect.height / 2);
         X.scale(this.scale, this.scale);
+        X.translate(-this.pos.x, -this.pos.y);
     }
 
     public applyTranslateOnly(X: CanvasRenderingContext2D): void {
         X.translate(-this.rect.x, -this.rect.y);
+    }
+
+    public canvasToWorldPos(canvasPos: Vec2): Vec2 {
+        return new Vec2M(
+            (canvasPos.x - this.rect.width / 2) / this.scale + this.pos.x,
+            (canvasPos.y - this.rect.height / 2) / this.scale + this.pos.y
+        );
     }
 
 
@@ -72,5 +80,10 @@ export class Camera {
 
         this.rect.x = this.pos.x - this.rect.width / 2;
         this.rect.y = this.pos.y - this.rect.height / 2;
+    }
+
+    private resizeHandler() {
+        this.rect.width = this.sizer.width;
+        this.rect.height = this.sizer.height;
     }
 }
