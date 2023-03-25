@@ -33,7 +33,7 @@ export class Ticker {
             this.tickByTime(Ticker.MAX_TICK_TIME_ELAPSED);
         }
 
-        this.tickByTime(deltaTime);
+        this.tickByTime(timeElapsed);
     }
 
     private tickByTime(deltaTime: number) {
