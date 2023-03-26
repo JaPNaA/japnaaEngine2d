@@ -94,6 +94,10 @@ export class JaPNaAEngine2d {
         }
     }
 
+    /**
+     * Start a requestAnimationFrame loop for ticks and draws, and a
+     * setInterval for fixedTicks. (If both options are enabled.)
+     */
     public start() {
         throw new Error("Not implemented.");
     }
@@ -167,12 +171,27 @@ const defaultHTMLOverlayOptions: Required<HTMLOverlayOptions> = {
 };
 
 /**
+ * Default PerformanceOptions
+ */
+const defaultTickOptions: Required<TickOptions> = {
+    fps: 'auto',
+    normalTicks: true,
+    fixedTick: 1 / 120,
+    maxTickDeltaTime: false,
+    collisionCheckEveryFixedTick: true,
+    visiblityHiddenBehaviour: 'pause',
+    longDelayBehaviour: 'skip',
+    longDelayLength: 500
+};
+
+/**
  * Default JaPNaAEngine2dOptions
  */
 const defaultJaPNaAEngineOptions: Required<JaPNaAEngine2dOptions> = {
     canvas: defaultCanvasOptions,
-    sizing: defaultCanvasSizeOptions,
     htmlOverlay: defaultHTMLOverlayOptions,
+    sizing: defaultCanvasSizeOptions,
+    ticks: defaultTickOptions,
     collision: 'sortedAuto',
     parentElement: document.body,
     touchInputAsMouseInput: true,
@@ -202,6 +221,15 @@ export interface JaPNaAEngine2dOptions {
     sizing?: CanvasSizeOptions;
 
     /**
+     * Performance options related to ticking and frames.
+     * 
+     * By default, the fps and normal ticks rate is automatic. Fixed ticks run
+     * 120 times a second. The engine stops ticking when the game is not
+     * visible, and ignores long delays.
+     */
+    ticks?: TickOptions; // !!!!!!!!! WORK IN PROGRESS !!!!!!!!!!!!
+
+    /**
      * Selects the system to use for collision detection.
      * 
      *   - 'none' - collisions are not detected
@@ -212,6 +240,7 @@ export interface JaPNaAEngine2dOptions {
      * 
      * default: 'sortedAuto'
      */
+    // !!!!!!!!!!!!! WORK IN PROGRESS !!!!!!!!!!!!!!!!!!!
     collision?: 'none' | 'simple' | 'sortedX' | 'sortedY' | 'sortedAuto' | 'quadTree';
 
     /**
@@ -230,6 +259,7 @@ export interface JaPNaAEngine2dOptions {
      * 
      * default: true
      */
+    // !!!!!!!!!!!!! WORK IN PROGRESS !!!!!!!!!!!!!!!!!!!
     touchInputAsMouseInput?: boolean;
 
     /**
@@ -240,4 +270,101 @@ export interface JaPNaAEngine2dOptions {
      * default: false
      */
     mouseInCollisionSystem?: boolean;
+}
+
+export interface TickOptions {
+    /**
+     * The target frames per second. 'auto' will match requestAnimationFrame's rate.
+     * 
+     * The actual frames per second output will never exceed 'auto'.
+     * 
+     * If you set fps to 'none', you will have to call engine.tickAndDraw()
+     * manually.
+     * 
+     * default: 'auto'
+     */
+    fps?: number | 'auto' | 'none';
+
+    /**
+     * Should use normal ticks? Normal ticks run before every frame.
+     * 
+     * If you disable this option, the game will only update on fixedTicks.
+     * 
+     * default: true
+     */
+    normalTicks?: boolean;
+
+    /**
+     * The time between each fixedTick.
+     * 
+     * Physics simulation is usually done in fixedTick. A lower fixedTick
+     * results in more accurate physics.
+     * 
+     * Setting to false disables fixedTicks.
+     * 
+     * Warning: a fixedTick value too small may result in your game freezing.
+     * 
+     * default: 1/120
+     */
+    fixedTick?: number | false;
+
+    /**
+     * The maximum time allowed between normal ticks.
+     * 
+     * maxTickDeltaTime is the alternative for fixedTick. Best if you don't
+     * care about accurate physics, but don't want things to pass through
+     * walls.
+     * 
+     * Warning: a maxTickDeltaTime too small may result in your game freezing.
+     * 
+     * default: false
+     */
+    maxTickDeltaTime?: number | false;
+
+    /**
+     * Check collisions every fixed tick?
+     * 
+     * Turning this off means collisions will only be checked every normal
+     * (non-fixed) tick. Can be a great performance improvement.
+     * 
+     * If disabled, consider using maxTickDeltaTime to ensure things don't
+     * pass through walls.
+     * 
+     * This option only has an effect is fixedTick is not false.
+     * 
+     * default: true
+     */
+    collisionCheckEveryFixedTick?: boolean;
+
+    /**
+     * What to do when the game or tab is hidden?
+     * 
+     *   - 'pause' means the game will pause.
+     *   - 'continue' means the game will continue fixedTick in the background. If maxTickDeltaTime is not false, tick will also run in the background. (Do note that browsers may prevent continued execution.)
+     * 
+     * default: 'pause'
+     */
+    visiblityHiddenBehaviour?: 'pause' | 'continue';
+
+    /**
+     * What to do when the game doesn't tick for a long time ('long' defined
+     * by the longDelayLength option).
+     * 
+     *   - 'pause' means the game will pause and ignore the long period.
+     *     - It is your responsibility to handle the pause and resume the game
+     *   - 'continue' means the game will 'catch up' by running all the ticks it needs
+     *   - 'skip' means the game will ignore the long period and only perform one tick
+     * 
+     * default: 'skip'
+     */
+    longDelayBehaviour?: 'pause' | 'continue' | 'skip';
+
+    /**
+     * How many milliseconds between ticks is a "long delay"?
+     * 
+     * This determines when longDelayBehaviour is performed.
+     * 
+     * default: 500
+     */
+    longDelayLength?: number;
 }
