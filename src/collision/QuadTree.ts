@@ -483,7 +483,12 @@ class QuadTree implements QuadTreeChild {
 
                 const element = that.elements[i].rectangle;
 
-                if (RectangleM.isColliding(element, rectangle)) {
+                // inlined version of
+                // if (RectangleM.isColliding(element, rectangle)) {
+                if (element.x < rectangle.x + rectangle.width &&
+                    element.x + element.width > rectangle.x &&
+                    element.y < rectangle.y + rectangle.height &&
+                    element.y + element.height > rectangle.y) {
                     return that.elements[i];
                 }
             }
@@ -577,7 +582,12 @@ class QuadTree implements QuadTreeChild {
             for (let i = that.elements.length - 1; i >= 0; i--) {
                 const element = that.elements[i].rectangle;
 
-                if (RectangleM.isColliding(element, rectangle)) {
+                // inlined version of
+                // if (RectangleM.isColliding(element, rectangle)) {
+                if (element.x < rectangle.x + rectangle.width &&
+                    element.x + element.width > rectangle.x &&
+                    element.y < rectangle.y + rectangle.height &&
+                    element.y + element.height > rectangle.y) {
                     entities.push(that.elements[i]);
                 }
             }

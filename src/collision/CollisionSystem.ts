@@ -8,7 +8,8 @@ const SLEEP_THRESHOLD = 0.0000005;
 
 export class CollisionSystem {
     public reactions = new CollisionReactionMap();
-    private quadTree = new QuadTree(100);
+    private quadTree = new QuadTree(1000);
+    private sleepingArray = new Array(10);
 
     private hitboxes: Hitbox<any>[] = [];
 
@@ -34,26 +35,26 @@ export class CollisionSystem {
 
     public _checkCollisions() {
         const numHitboxes = this.hitboxes.length;
-        const sleepingArray = new Array(numHitboxes);
+        this.sleepingArray.length = numHitboxes;
         const abs = Math.abs;
         for (let i = 0; i < numHitboxes; i++) {
             const hitbox = this.hitboxes[i];
             // sleepingArray[i] = hitbox.rectangle.sameWithinThreshold(hitbox._quadTreeRecord, SLEEP_THRESHOLD);
             // next line is inlined version
-            sleepingArray[i] = abs(hitbox.rectangle.x - hitbox._quadTreeRecord.x) < SLEEP_THRESHOLD &&
+            this.sleepingArray[i] = abs(hitbox.rectangle.x - hitbox._quadTreeRecord.x) < SLEEP_THRESHOLD &&
                 abs(hitbox.rectangle.y - hitbox._quadTreeRecord.y) < SLEEP_THRESHOLD &&
                 abs(hitbox.rectangle.width - hitbox._quadTreeRecord.width) < SLEEP_THRESHOLD &&
                 abs(hitbox.rectangle.height - hitbox._quadTreeRecord.height) < SLEEP_THRESHOLD;
 
             hitbox._collidedWith.length = 0;
-            if (!sleepingArray[i]) {
+            if (!this.sleepingArray[i]) {
                 this.quadTree.updateSingle(hitbox);
             }
         }
 
         for (let i = 0; i < numHitboxes; i++) {
             const hitbox = this.hitboxes[i];
-            if (sleepingArray[i]) { continue; }
+            if (this.sleepingArray[i]) { continue; }
             const collisions = this.quadTree.query(hitbox.rectangle);
             for (const collision of collisions) {
                 if (collision !== hitbox && !collision._collidedWith.includes(hitbox)) {
