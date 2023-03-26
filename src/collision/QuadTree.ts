@@ -9,6 +9,7 @@ import { Collidable, Hitbox } from "./Hitbox.js";
 class QuadTree implements QuadTreeChild {
     private static leafMax = 6;
     private static branchMin = 6;
+    private static maxDepth = 40;
 
     public elements: Hitbox<Collidable>[];
     public elementCount: number;
@@ -16,6 +17,9 @@ class QuadTree implements QuadTreeChild {
     /** Quadrants [I (++), II (-+), III (--), IV(+-)] */
     public children: QuadTreeChild[] | null;
 
+    private size: number;
+    private x: number;
+    private y: number;
     private halfSize: number;
 
     /**
@@ -26,6 +30,9 @@ class QuadTree implements QuadTreeChild {
         this.elementCount = 0;
         this.children = null;
 
+        this.size = size;
+        this.x = 0;
+        this.y = 0;
         this.halfSize = size / 2;
     }
 
@@ -37,9 +44,31 @@ class QuadTree implements QuadTreeChild {
 
         obj._quadTreeRecord.copy(obj.rectangle);
 
+        // grow quadtree if too small
+        while ( // obj not contained in root
+            x <= this.x ||
+            rightX >= this.x + this.size ||
+            y <= this.y ||
+            bottomY >= this.y + this.size
+        ) {
+            if (obj.rectangle.centerX() > this.halfSize + this.x) {
+                if (obj.rectangle.centerY() > this.halfSize + this.y) {
+                    this.growRoot(2);
+                } else {
+                    this.growRoot(1);
+                }
+            } else {
+                if (obj.rectangle.centerY() > this.halfSize + this.y) {
+                    this.growRoot(3);
+                } else {
+                    this.growRoot(0);
+                }
+            }
+        }
+
         let currTree: QuadTreeChild = this;
-        let cx: number = this.halfSize;
-        let cy: number = this.halfSize;
+        let cx: number = this.halfSize + this.x; // center x of currTree
+        let cy: number = this.halfSize + this.y; // center y of currTree
         let qSize: number = this.halfSize / 2;
         let eSize!: number;
         // let depth: number = 0;
@@ -119,6 +148,28 @@ class QuadTree implements QuadTreeChild {
         const newBottomY = obj.rectangle.bottomY();
         const newRightX = obj.rectangle.rightX();
 
+        // grow quadtree if too small
+        while ( // obj not contained in root
+            newX < this.x ||
+            newRightX > this.x + this.size ||
+            newY < this.y ||
+            newBottomY > this.y + this.size
+        ) {
+            if (obj.rectangle.centerX() > this.halfSize + this.x) {
+                if (obj.rectangle.centerY() > this.halfSize + this.y) {
+                    this.growRoot(2);
+                } else {
+                    this.growRoot(1);
+                }
+            } else {
+                if (obj.rectangle.centerY() > this.halfSize + this.y) {
+                    this.growRoot(3);
+                } else {
+                    this.growRoot(0);
+                }
+            }
+        }
+
         obj._quadTreeRecord.copy(obj.rectangle);
 
         // keep track of "stack"
@@ -129,8 +180,8 @@ class QuadTree implements QuadTreeChild {
 
         let found = false;
         let that: QuadTreeChild = this;
-        let cx: number = this.halfSize;
-        let cy: number = this.halfSize;
+        let cx: number = this.halfSize + this.x;
+        let cy: number = this.halfSize + this.y;
         let qSize: number = this.halfSize / 2;
         let eSize!: number;
 
@@ -290,8 +341,8 @@ class QuadTree implements QuadTreeChild {
         let lowBranch: QuadTreeChild | undefined;
 
         let that: QuadTreeChild = this;
-        let cx: number = this.halfSize;
-        let cy: number = this.halfSize;
+        let cx: number = this.halfSize + this.x;
+        let cy: number = this.halfSize + this.y;
         let qSize: number = this.halfSize / 2;
         let eSize!: number;
 
@@ -355,7 +406,7 @@ class QuadTree implements QuadTreeChild {
         // as an alternative to recursive
         /** [child, cx, cy, halfSize of child] */
         const que: [QuadTreeChild, number, number, number][] = [
-            [this, this.halfSize, this.halfSize, this.halfSize / 2]
+            [this, this.halfSize + this.x, this.halfSize + this.y, this.halfSize / 2]
         ];
 
         let queItem;
@@ -449,7 +500,7 @@ class QuadTree implements QuadTreeChild {
         // as an alternative to recursive
         /** [child, cx, cy, halfSize of child] */
         const que: [QuadTreeChild, number, number, number][] = [
-            [this, this.halfSize, this.halfSize, this.halfSize / 2]
+            [this, this.halfSize + this.x, this.halfSize + this.y, this.halfSize / 2]
         ];
         const entities: Hitbox<Collidable>[] = [];
 
@@ -539,18 +590,17 @@ class QuadTree implements QuadTreeChild {
      * Querys a rectangle in the quadtree without checking if the
      * entities actually collide with the given rectangle
      */
-    public rectQueryNoVerify(x_: number, y_: number, width_: number, height_: number): Hitbox<Collidable>[] {
-        const x = x_ + width_ / 2;
-        const y = y_ + height_ / 2;
-        const hwidth = width_ / 2;
-        const hheight = height_ / 2;
-
+    public rectQueryNoVerify(rect: Rectangle): Hitbox<Collidable>[] {
+        const x = rect.x;
+        const y = rect.y;
+        const width = rect.width;
+        const height = rect.height;
         const elms = [];
 
         // as an alternative to recursive
         /** [child, cx, cy, halfSize of child] */
         const que: [QuadTreeChild, number, number, number][] = [
-            [this, this.halfSize, this.halfSize, this.halfSize / 2]
+            [this, this.halfSize + this.x, this.halfSize + this.y, this.halfSize / 2]
         ];
 
         let queItem;
@@ -566,27 +616,27 @@ class QuadTree implements QuadTreeChild {
                 if (y > cy) {
                     if (x > cx) {
                         que.push([that.children[0], cx + qSize, cy + qSize, eSize]);
-                        if (x - hwidth < cx) {
+                        if (x - width / 2 < cx) {
                             que.push([that.children[1], cx - qSize, cy + qSize, eSize]);
-                            if (y - hheight < cy) {
+                            if (y - height / 2 < cy) {
                                 que.push([that.children[2], cx - qSize, cy - qSize, eSize]);
                                 que.push([that.children[3], cx + qSize, cy - qSize, eSize]);
                             }
                         } else {
-                            if (y - hheight < cy) {
+                            if (y - height / 2 < cy) {
                                 que.push([that.children[3], cx + qSize, cy - qSize, eSize]);
                             }
                         }
                     } else {
                         que.push([that.children[1], cx - qSize, cy + qSize, eSize]);
-                        if (x + hwidth > cx) {
+                        if (x + width / 2 > cx) {
                             que.push([that.children[0], cx + qSize, cy + qSize, eSize]);
-                            if (y - hheight < cy) {
+                            if (y - height / 2 < cy) {
                                 que.push([that.children[2], cx - qSize, cy - qSize, eSize]);
                                 que.push([that.children[3], cx + qSize, cy - qSize, eSize]);
                             }
                         } else {
-                            if (y - hheight < cy) {
+                            if (y - height / 2 < cy) {
                                 que.push([that.children[2], cx - qSize, cy - qSize, eSize]);
                             }
                         }
@@ -594,27 +644,27 @@ class QuadTree implements QuadTreeChild {
                 } else {
                     if (x > cx) {
                         que.push([that.children[3], cx + qSize, cy - qSize, eSize]);
-                        if (x - hwidth < cx) {
+                        if (x - width / 2 < cx) {
                             que.push([that.children[2], cx - qSize, cy - qSize, eSize]);
-                            if (y + hheight > cy) {
+                            if (y + height / 2 > cy) {
                                 que.push([that.children[0], cx + qSize, cy + qSize, eSize]);
                                 que.push([that.children[1], cx - qSize, cy + qSize, eSize]);
                             }
                         } else {
-                            if (y + hheight > cy) {
+                            if (y + height / 2 > cy) {
                                 que.push([that.children[0], cx + qSize, cy + qSize, eSize]);
                             }
                         }
                     } else {
                         que.push([that.children[2], cx - qSize, cy - qSize, eSize]);
-                        if (x + hwidth > cx) {
+                        if (x + width / 2 > cx) {
                             que.push([that.children[3], cx + qSize, cy - qSize, eSize]);
-                            if (y + hheight > cy) {
+                            if (y + height / 2 > cy) {
                                 que.push([that.children[0], cx + qSize, cy + qSize, eSize]);
                                 que.push([that.children[1], cx - qSize, cy + qSize, eSize]);
                             }
                         } else {
-                            if (y + hheight > cy) {
+                            if (y + height / 2 > cy) {
                                 que.push([that.children[1], cx - qSize, cy + qSize, eSize]);
                             }
                         }
@@ -642,7 +692,7 @@ class QuadTree implements QuadTreeChild {
         // as an alternative to recursive
         /** [child, cx, cy, halfSize of child] */
         const que: [QuadTreeChild, number, number, number][] = [
-            [this, this.halfSize, this.halfSize, this.halfSize / 2]
+            [this, this.halfSize + this.x, this.halfSize + this.y, this.halfSize / 2]
         ];
 
         let queItem;
@@ -730,6 +780,96 @@ class QuadTree implements QuadTreeChild {
         }
     }
 
+    /**
+     * Changes the root so that the root becomes a child in the specified quadrant.
+     * 
+     * Precondition: all elements are contained in the quadtree. (Not outside bounds.)
+     */
+    private growRoot(quadrant: number) {
+        const newChildren = [
+            createQuadTreeChild(),
+            createQuadTreeChild(),
+            createQuadTreeChild(),
+            createQuadTreeChild()
+        ];
+        const newRootChild = newChildren[quadrant];
+        newRootChild.children = this.children;
+        newRootChild.elements = this.elements;
+        newRootChild.elementCount = this.elementCount;
+        this.children = newChildren;
+        this.elements = [];
+        switch (quadrant) {
+            case 0:
+                this.x -= this.size;
+                this.y -= this.size;
+                break;
+            case 1:
+                this.y -= this.size;
+                break;
+            case 2:
+                break;
+            case 3:
+                this.x -= this.size;
+                break;
+        }
+        this.size *= 2;
+        this.halfSize *= 2;
+    }
+
+    /**
+     * Shrinks boundaries of the root of the quadtree if possible
+     */
+    public shrinkRootIfCan() {
+        if (!this.children) { return; }
+        if (this.elements.length !== 0) { return; }
+        let numEmpty = 0;
+        let nonEmpty = 0;
+        if (this.children[0].elementCount === 0) { numEmpty++; }
+        if (this.children[1].elementCount === 0) { numEmpty++; } else { nonEmpty = 1; }
+        if (this.children[2].elementCount === 0) { numEmpty++; } else { nonEmpty = 2; }
+        if (this.children[3].elementCount === 0) { numEmpty++; } else { nonEmpty = 3; }
+        if (numEmpty === 3) {
+            this.shrinkRoot(nonEmpty);
+        }
+    }
+
+    /**
+     * Changes root to one of the root's children (specified by quadrant).
+     * 
+     * Precondition: The other quadrants in the root and root.elements contain no elements.
+     * 
+     * Quadrants: [I (++), II (-+), III (--), IV(+-)]
+     */
+    private shrinkRoot(quadrant: number) {
+        if (this.children == null) {
+            this.growLeaf(this, this.halfSize, this.halfSize);
+        }
+
+        const targetChild = this.children![quadrant];
+        this.children = targetChild.children;
+        this.elements = targetChild.elements;
+        this.elementCount = targetChild.elementCount;
+
+        switch (quadrant) {
+            case 0:
+                this.x += this.halfSize;
+                this.y += this.halfSize;
+                break;
+            case 1:
+                this.y += this.halfSize;
+                break;
+            case 2:
+                break;
+            case 3:
+                this.x += this.halfSize;
+                break;
+        }
+
+        this.halfSize /= 2;
+        this.size /= 2;
+    }
+
+    /** Merges child branches into parent branch */
     private mergeBranch(branch: QuadTreeChild): void {
         const elements: Hitbox<Collidable>[] = [];
         const que: QuadTreeChild[] = [branch];
@@ -762,8 +902,18 @@ function createQuadTreeChild(): QuadTreeChild {
 }
 
 interface QuadTreeChild {
+    /**
+     * Elements on the child. If is a leaf, is the elements in the quadrant.
+     * If is a branch, are the elements that don't fit into a leaf.
+     */
     elements: Hitbox<Collidable>[];
+    /**
+     * Child quadtrees, if exists.
+     */
     children: QuadTreeChild[] | null;
+    /**
+     * The number of total elements in self and ancestors.
+     */
     elementCount: number;
 }
 

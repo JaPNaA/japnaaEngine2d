@@ -1,6 +1,6 @@
-import { Rectangle, RectangleM } from "../geometry/Rectangle.js";
+import { Rectangle } from "../geometry/Rectangle.js";
 import { removeElmFromArray } from "../util/removeElmFromArray.js";
-import { QuadTree } from "./CircleQuadTree.js";
+import { QuadTree } from "./QuadTree.js";
 import { CollisionReactionMap } from "./CollisionReactionMap.js";
 import { Hitbox } from "./Hitbox.js";
 
@@ -8,9 +8,11 @@ const SLEEP_THRESHOLD = 0.0000005;
 
 export class CollisionSystem {
     public reactions = new CollisionReactionMap();
-    private quadTree = new QuadTree(10000);
+    private quadTree = new QuadTree(100);
 
     private hitboxes: Hitbox<any>[] = [];
+
+    constructor() { }
 
     public addHitbox(hitbox: Hitbox<any>) {
         this.hitboxes.push(hitbox);
@@ -23,13 +25,7 @@ export class CollisionSystem {
     }
 
     public getCollisionsWith(rectangle: Rectangle): Hitbox<any>[] {
-        const colliding: Hitbox<any>[] = [];
-        for (const hitbox of this.hitboxes) {
-            if (RectangleM.isColliding(rectangle, hitbox.rectangle)) {
-                colliding.push(hitbox);
-            }
-        }
-        return colliding;
+        return this.quadTree.query(rectangle);
     }
 
     public __debugRenderQuadTree(X: CanvasRenderingContext2D) {
@@ -66,5 +62,7 @@ export class CollisionSystem {
                 }
             }
         }
+
+        this.quadTree.shrinkRootIfCan();
     }
 }
