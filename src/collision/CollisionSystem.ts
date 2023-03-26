@@ -46,7 +46,9 @@ export class CollisionSystem {
                 abs(hitbox.rectangle.width - hitbox._quadTreeRecord.width) < SLEEP_THRESHOLD &&
                 abs(hitbox.rectangle.height - hitbox._quadTreeRecord.height) < SLEEP_THRESHOLD;
 
-            hitbox._collidedWith.length = 0;
+            if (hitbox._collidedWith.length) {
+                hitbox._collidedWith.length = 0;
+            }
             if (!this.sleepingArray[i]) {
                 this.quadTree.updateSingle(hitbox);
             }
