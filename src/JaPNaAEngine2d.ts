@@ -4,7 +4,7 @@ import { ParentWorldElm } from "./canvasElm/ParentWorldElm.js";
 import { WorldElm } from "./canvasElm/WorldElm.js";
 import { SubscriptionsComponent } from "./canvasElm/components/SubscriptionsComponent.js";
 import { CanvasSizeOptions, CanvasSizer } from "./CanvasSizer.js";
-import { CollisionSystem } from "./collision/CollisionSystem.js";
+import { CollisionSystem, CollisionSystemQuadTree, CollisionSystemSimple, CollisionSystemSorted, NoCollisionSystem } from "./collision/CollisionSystem.js";
 import { Component, Elm, InputElm } from "./elements.js";
 import { HTMLOverlay, HTMLOverlayOptions } from "./HTMLOverlay.js";
 import { KeyboardInput } from "./KeyboardInput.js";
@@ -14,6 +14,7 @@ import { World } from "./World.js";
 import { KeyboardMovementComponent } from "./canvasElm/components/KeyboardMovementComponent.js";
 import { WorldElmWithComponents } from "./canvasElm/WorldElmWithComponents.js";
 import { Vec2 } from "./geometry/Vec2.js";
+import { CollisionReactionMap } from "./collision/CollisionReactionMap.js";
 
 export class JaPNaAEngine2d {
     /** Keyboard input */
@@ -31,8 +32,10 @@ export class JaPNaAEngine2d {
 
     /** Offsetting and zooming in the canvas */
     public camera: Camera;
-    /** Detects and handles collisions between elements */
+    /** Detects collisions between elements */
     public collisions: CollisionSystem;
+    /** Handles collisions */
+    public collisionReactions: CollisionReactionMap;
     /** The world contains all elements */
     public world: World;
     /** Controls timing of events in the engine */
@@ -71,7 +74,25 @@ export class JaPNaAEngine2d {
         }, this.sizer);
 
         this.camera = new Camera(this.sizer);
-        this.collisions = new CollisionSystem();
+        if (this.options.collision === "none") {
+            this.collisions = new NoCollisionSystem();
+        } else if (this.options.collision === "quadTree") {
+            this.collisions = new CollisionSystemQuadTree();
+        } else if (this.options.collision === "simple") {
+            this.collisions = new CollisionSystemSimple();
+        } else {
+            const collisionSystemSorted = new CollisionSystemSorted();
+            this.collisions = collisionSystemSorted;
+            if (this.options.collision === "sortedX") {
+                collisionSystemSorted.axisFixed = true;
+                collisionSystemSorted.useYAxis = false;
+            } else if (this.options.collision === "sortedY") {
+                collisionSystemSorted.axisFixed = true;
+                collisionSystemSorted.useYAxis = true;
+            }
+        }
+        this.collisionReactions = new CollisionReactionMap();
+        this.collisions._setReactions(this.collisionReactions);
         this.world = new World(this);
         this.ticker = new Ticker(this);
 
@@ -235,12 +256,13 @@ export interface JaPNaAEngine2dOptions {
      *   - 'none' - collisions are not detected
      *   - 'simple' - every object's aabb bounding boxes are checked with every other
      *   - 'sortedX' / 'sortedY' / 'sortedAuto' - sorts every object by x or y axis, then checks collisions with neighbors on x/y axis
+     *     - Faster if most of your objects are lined up in a straight line (ex. side-scrolling)
      *   - 'quadTree' - organizes objects in a quadTree and checks collisions with nearby objects
-     *     - Hitboxes in the collision system must be QuadTreeHitbox
+     *     - Hitboxes in the collision system will be converted to QuadTreeHitboxes
+     *     - Faster for large maps in both axis.
      * 
      * default: 'sortedAuto'
      */
-    // !!!!!!!!!!!!! WORK IN PROGRESS !!!!!!!!!!!!!!!!!!!
     collision?: 'none' | 'simple' | 'sortedX' | 'sortedY' | 'sortedAuto' | 'quadTree';
 
     /**

@@ -1,6 +1,6 @@
-import { Rectangle, RectangleM } from "../geometry/Rectangle.js";
-import { Vec2M } from "../geometry/Vec2.js";
-import { Collidable, Hitbox } from "./Hitbox.js";
+import { Rectangle } from "../geometry/Rectangle.js";
+import { QuadTreeHitbox } from "./CollisionSystem.js";
+import { Collidable } from "./Hitbox.js";
 
 /**
  * The root of a quad tree implementation that checks for
@@ -11,7 +11,7 @@ class QuadTree implements QuadTreeChild {
     private static branchMin = 6;
     private static maxDepth = 40;
 
-    public elements: Hitbox<Collidable>[];
+    public elements: QuadTreeHitbox<Collidable>[];
     public elementCount: number;
 
     /** Quadrants [I (++), II (-+), III (--), IV(+-)] */
@@ -36,7 +36,7 @@ class QuadTree implements QuadTreeChild {
         this.halfSize = size / 2;
     }
 
-    public add(obj: Hitbox<Collidable>): void {
+    public add(obj: QuadTreeHitbox<Collidable>): void {
         const x = obj.rectangle.x;
         const y = obj.rectangle.y;
         const rightX = obj.rectangle.rightX();
@@ -138,7 +138,7 @@ class QuadTree implements QuadTreeChild {
     /**
      * Update single element in tree
      */
-    public updateSingle(obj: Hitbox<Collidable>): void {
+    public updateSingle(obj: QuadTreeHitbox<Collidable>): void {
         const qtX = obj._quadTreeRecord.x;
         const qtY = obj._quadTreeRecord.y;
         const qtRightX = obj._quadTreeRecord.rightX();
@@ -334,7 +334,7 @@ class QuadTree implements QuadTreeChild {
         }
     }
 
-    public remove(obj: Hitbox<Collidable>): void {
+    public remove(obj: QuadTreeHitbox<Collidable>): void {
         const x = obj._quadTreeRecord.x;
         const y = obj._quadTreeRecord.y;
 
@@ -396,7 +396,7 @@ class QuadTree implements QuadTreeChild {
         }
     }
 
-    public queryOne(rectangle: Rectangle, exclude?: Hitbox<Collidable>): Hitbox<Collidable> | undefined {
+    public queryOne(rectangle: Rectangle, exclude?: QuadTreeHitbox<Collidable>): QuadTreeHitbox<Collidable> | undefined {
         // possible optimization: check if query only collides with 3 quadrants
         const x = rectangle.x;
         const y = rectangle.y;
@@ -495,7 +495,7 @@ class QuadTree implements QuadTreeChild {
         }
     }
 
-    public query(rectangle: Rectangle): Hitbox<Collidable>[] {
+    public query(rectangle: Rectangle): QuadTreeHitbox<Collidable>[] {
         // possible optimization: check if query only collides with 3 quadrants
         const x = rectangle.x;
         const y = rectangle.y;
@@ -507,7 +507,7 @@ class QuadTree implements QuadTreeChild {
         const que: [QuadTreeChild, number, number, number][] = [
             [this, this.halfSize + this.x, this.halfSize + this.y, this.halfSize / 2]
         ];
-        const entities: Hitbox<Collidable>[] = [];
+        const entities: QuadTreeHitbox<Collidable>[] = [];
 
         let queItem;
         while (queItem = que.pop()) {
@@ -600,7 +600,7 @@ class QuadTree implements QuadTreeChild {
      * Querys a rectangle in the quadtree without checking if the
      * entities actually collide with the given rectangle
      */
-    public rectQueryNoVerify(rect: Rectangle): Hitbox<Collidable>[] {
+    public rectQueryNoVerify(rect: Rectangle): QuadTreeHitbox<Collidable>[] {
         const x = rect.x;
         const y = rect.y;
         const width = rect.width;
@@ -881,7 +881,7 @@ class QuadTree implements QuadTreeChild {
 
     /** Merges child branches into parent branch */
     private mergeBranch(branch: QuadTreeChild): void {
-        const elements: Hitbox<Collidable>[] = [];
+        const elements: QuadTreeHitbox<Collidable>[] = [];
         const que: QuadTreeChild[] = [branch];
 
         let curr;
@@ -916,7 +916,7 @@ interface QuadTreeChild {
      * Elements on the child. If is a leaf, is the elements in the quadrant.
      * If is a branch, are the elements that don't fit into a leaf.
      */
-    elements: Hitbox<Collidable>[];
+    elements: QuadTreeHitbox<Collidable>[];
     /**
      * Child quadtrees, if exists.
      */

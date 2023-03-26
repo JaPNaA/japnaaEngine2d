@@ -8,6 +8,7 @@ const engine = new JaPNaAEngine2d({
         sizing: 'fit',
         dpr: 'oneToOne'
     },
+    collision: "quadTree",
     mouseInCollisionSystem: true,
     htmlOverlay: {
         relativeToWorld: true
@@ -29,7 +30,7 @@ class Square extends WorldElmWithComponents {
 
     _setEngine(engine) {
         super._setEngine(engine);
-        this.engine.collisions.addHitbox(new Hitbox(this.rect, this));
+        this.engine.collisions.addHitbox(this.hitbox = new Hitbox(this.rect, this));
     }
 
     resetX() {
@@ -55,6 +56,12 @@ class Square extends WorldElmWithComponents {
         // if (other.collisionType === engine.mouse.collisionType) {
         //     this.color = "#0f0";
         // }
+    }
+
+    remove() {
+        // @ts-ignore
+        this.engine.collisions.removeHitbox(this.hitbox);
+        super.remove();
     }
 }
 
@@ -96,7 +103,7 @@ class DraggableSquare extends Square {
     }
 }
 
-engine.collisions.reactions.setCollisionReaction(Square.collisionType, engine.mouse.collisionType, (square, mouse) => {
+engine.collisionReactions.setCollisionReaction(Square.collisionType, engine.mouse.collisionType, (square, mouse) => {
     square.elm.color = "#00f";
 });
 
@@ -142,7 +149,7 @@ for (let i = 0; i < 1000; i++) {
     const square = new DraggableSquare();
     squares.push(square);
     square.rect.x = Math.random() * 10000;
-    square.rect.y = Math.random() * 10000;
+    square.rect.y = Math.random() * 1000;
     engine.world.addElm(square);
 }
 
@@ -158,4 +165,11 @@ console.log(engine);
 
 // todo: test
 // CollisionSystem
+// quadtree: maxDepth
 // Ticker
+// Renderer
+// options:
+//  collision
+//  tick
+//  touchInputAsMouseInput
+//  parentElement
