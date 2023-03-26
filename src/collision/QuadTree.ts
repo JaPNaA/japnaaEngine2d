@@ -9,6 +9,8 @@ import { Collidable } from "./Hitbox.js";
 class QuadTree implements QuadTreeChild {
     private static leafMax = 6;
     private static branchMin = 6;
+    // maxDepth is used to prevent seven RectM(1, 1, 0, 0)s from making a black hole in the quadtree, etc.
+    // not honored percisely
     private static maxDepth = 40;
 
     public elements: QuadTreeHitbox<Collidable>[];
@@ -21,6 +23,8 @@ class QuadTree implements QuadTreeChild {
     private x: number;
     private y: number;
     private halfSize: number;
+    /** The amount the tree has grown. Does not exceed maxDepth */
+    private growDepth: number;
 
     /**
      * @param size max width and height of the quad tree
@@ -34,6 +38,7 @@ class QuadTree implements QuadTreeChild {
         this.x = 0;
         this.y = 0;
         this.halfSize = size / 2;
+        this.growDepth = 0;
     }
 
     public add(obj: QuadTreeHitbox<Collidable>): void {
@@ -46,10 +51,10 @@ class QuadTree implements QuadTreeChild {
 
         // grow quadtree if too small
         while ( // obj not contained in root
-            x <= this.x ||
-            rightX >= this.x + this.size ||
-            y <= this.y ||
-            bottomY >= this.y + this.size
+            (x <= this.x ||
+                rightX >= this.x + this.size ||
+                y <= this.y ||
+                bottomY >= this.y + this.size) && this.growDepth < QuadTree.maxDepth
         ) {
             if (obj.rectangle.centerX() > this.halfSize + this.x) {
                 if (obj.rectangle.centerY() > this.halfSize + this.y) {
@@ -71,17 +76,17 @@ class QuadTree implements QuadTreeChild {
         let cy: number = this.halfSize + this.y; // center y of currTree
         let qSize: number = this.halfSize / 2;
         let eSize!: number;
-        // let depth: number = 0;
+        let depth: number = 0;
 
         while (true) {
             eSize = qSize / 2;
             currTree.elementCount++;
-            // depth++;
+            depth++;
 
             if (currTree.children === null) {
                 // add to leaf
                 currTree.elements.push(obj);
-                if (currTree.elementCount > QuadTree.leafMax) {
+                if (currTree.elementCount > QuadTree.leafMax && depth < QuadTree.maxDepth) {
                     this.growLeaf(currTree, cx, cy);
                 }
                 break;
@@ -150,10 +155,10 @@ class QuadTree implements QuadTreeChild {
 
         // grow quadtree if too small
         while ( // obj not contained in root
-            newX < this.x ||
-            newRightX > this.x + this.size ||
-            newY < this.y ||
-            newBottomY > this.y + this.size
+            (newX < this.x ||
+                newRightX > this.x + this.size ||
+                newY < this.y ||
+                newBottomY > this.y + this.size) && this.growDepth < QuadTree.maxDepth
         ) {
             if (obj.rectangle.centerX() > this.halfSize + this.x) {
                 if (obj.rectangle.centerY() > this.halfSize + this.y) {
@@ -184,6 +189,7 @@ class QuadTree implements QuadTreeChild {
         let cy: number = this.halfSize + this.y;
         let qSize: number = this.halfSize / 2;
         let eSize!: number;
+        let depth: number = 0;
 
         // search for object
         outer: while (true) {
@@ -203,6 +209,7 @@ class QuadTree implements QuadTreeChild {
             if (that.children === null) {
                 break; // end of tree
             } else {
+                depth++;
                 if (qtY > cy) {
                     if (qtX > cx) {
                         that = that.children[0];
@@ -264,6 +271,7 @@ class QuadTree implements QuadTreeChild {
             cx = stack[1];
             cy = stack[2];
             qSize = stack[3];
+            depth--;
 
             that.elementCount--;
         }
@@ -272,11 +280,12 @@ class QuadTree implements QuadTreeChild {
         while (true) {
             eSize = qSize / 2;
             that.elementCount++;
+            depth++;
 
             if (that.children === null) {
                 // add to leaf
                 that.elements.push(obj);
-                if (that.elementCount > QuadTree.leafMax) {
+                if (that.elementCount > QuadTree.leafMax && depth < QuadTree.maxDepth) {
                     this.growLeaf(that, cx, cy);
                 }
                 break;
@@ -824,6 +833,7 @@ class QuadTree implements QuadTreeChild {
         }
         this.size *= 2;
         this.halfSize *= 2;
+        this.growDepth++;
     }
 
     /**
@@ -877,6 +887,7 @@ class QuadTree implements QuadTreeChild {
 
         this.halfSize /= 2;
         this.size /= 2;
+        this.growDepth--;
     }
 
     /** Merges child branches into parent branch */

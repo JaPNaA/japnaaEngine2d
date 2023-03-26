@@ -26,7 +26,7 @@ export interface QuadTreeHitbox<T extends Collidable> {
  */
 export class CollisionSystemQuadTree implements CollisionSystem {
     private reactions!: CollisionReactionMap;
-    private quadTree = new QuadTree(1000);
+    private quadTree = new QuadTree(1447); // initial start at 1447 (arbitrary); todo: make modifyable through settings
     private sleepingArray = new Array(10);
 
     private hitboxes: QuadTreeHitbox<any>[] = [];

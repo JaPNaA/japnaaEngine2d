@@ -164,8 +164,6 @@ requanf();
 console.log(engine);
 
 // todo: test
-// CollisionSystem
-// quadtree: maxDepth
 // Ticker
 // Renderer
 // options:
