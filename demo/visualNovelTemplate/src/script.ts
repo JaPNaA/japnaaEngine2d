@@ -1,4 +1,4 @@
-import { JaPNaAEngine2d, WorldElm } from "../../build/JaPNaAEngine2d.js";
+import { JaPNaAEngine2d, WorldElm } from "../../../build/JaPNaAEngine2d.js";
 
 const GAME_TITLE = "Dokidoki Tokimeki Kirakira Raburabu Game";
 const WIDTH = 1280;
