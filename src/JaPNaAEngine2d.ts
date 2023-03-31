@@ -94,7 +94,10 @@ export class JaPNaAEngine2d {
         this.collisionReactions = new CollisionReactionMap();
         this.collisions._setReactions(this.collisionReactions);
         this.world = new World(this);
-        this.ticker = new Ticker(this);
+        this.ticker = new Ticker(this, {
+            ...defaultTickOptions,
+            ...this.options.ticks
+        });
 
         const screenToWorldPos = (screenPos: Vec2) => this.camera.canvasToWorldPos(this.canvas.screenPosToCanvasPos(screenPos));
         this.htmlOverlay._screenToWorldPos = this.mouse._screenToWorldPos = screenToWorldPos;
@@ -113,6 +116,8 @@ export class JaPNaAEngine2d {
         } else {
             throw new Error("Not implemented");
         }
+
+        this.ticker.startNormalTickLoopIfShould();
     }
 
     /**
@@ -123,10 +128,14 @@ export class JaPNaAEngine2d {
         throw new Error("Not implemented.");
     }
 
-    // todo: make private
-    public tick() {
+    /**
+     * Triggers a tick for components other than the Ticker.
+     * 
+     * Client could should not use this method.
+     */
+    public _tickComponents() {
         this.mouse.tick();
-        this.ticker.tickAll(this.world.getElms());
+        // this.ticker.tickAll(this.world.getElms());
     }
 
     // todo: make private
@@ -202,7 +211,7 @@ const defaultTickOptions: Required<TickOptions> = {
     collisionCheckEveryFixedTick: true,
     visiblityHiddenBehaviour: 'pause',
     longDelayBehaviour: 'skip',
-    longDelayLength: 500
+    longDelayLength: 0.5
 };
 
 /**
@@ -248,7 +257,7 @@ export interface JaPNaAEngine2dOptions {
      * 120 times a second. The engine stops ticking when the game is not
      * visible, and ignores long delays.
      */
-    ticks?: TickOptions; // !!!!!!!!! WORK IN PROGRESS !!!!!!!!!!!!
+    ticks?: TickOptions;
 
     /**
      * Selects the system to use for collision detection.
@@ -317,7 +326,7 @@ export interface TickOptions {
     normalTicks?: boolean;
 
     /**
-     * The time between each fixedTick.
+     * The seconds between each fixedTick.
      * 
      * Physics simulation is usually done in fixedTick. A lower fixedTick
      * results in more accurate physics.
@@ -331,7 +340,7 @@ export interface TickOptions {
     fixedTick?: number | false;
 
     /**
-     * The maximum time allowed between normal ticks.
+     * The maximum seconds allowed between normal ticks.
      * 
      * maxTickDeltaTime is the alternative for fixedTick. Best if you don't
      * care about accurate physics, but don't want things to pass through
@@ -382,11 +391,11 @@ export interface TickOptions {
     longDelayBehaviour?: 'pause' | 'continue' | 'skip';
 
     /**
-     * How many milliseconds between ticks is a "long delay"?
+     * How many seconds between ticks is a "long delay"?
      * 
      * This determines when longDelayBehaviour is performed.
      * 
-     * default: 500
+     * default: 0.5
      */
     longDelayLength?: number;
 }
