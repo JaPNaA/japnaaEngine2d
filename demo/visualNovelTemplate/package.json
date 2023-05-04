@@ -1,0 +1,18 @@
+{
+  "name": "visualnoveltemplate",
+  "version": "1.0.0",
+  "description": "",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "parcel": "^2.8.3"
+  },
+  
+  "source": "index.html",
+  "alias": {
+    "japnaaengine2d": "./node_modules/japnaaengine2d/src/JaPNaAEngine2d.ts"
+  }
+}
