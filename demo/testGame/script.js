@@ -12,6 +12,14 @@ const engine = new JaPNaAEngine2d({
     mouseInCollisionSystem: true,
     htmlOverlay: {
         relativeToWorld: true
+    },
+    ticks: {
+        collisionCheckEveryFixedTick: false,
+        fixedTick: false,
+        fps: 'auto',
+        maxTickDeltaTime: false,
+        normalTicks: true,
+        longDelayLength: 1
     }
 });
 
@@ -97,6 +105,7 @@ class DraggableSquare extends Square {
 
     tick() {
         super.tick();
+        // this.rect.x++;
         if (!this.hold) { return; }
         this.rect.x = this.engine.mouse.worldPos.x;
         this.rect.y = this.engine.mouse.worldPos.y;
@@ -107,35 +116,35 @@ engine.collisionReactions.setCollisionReaction(Square.collisionType, engine.mous
     square.elm.color = "#00f";
 });
 
-function requanf() {
-    engine.tick();
+// function requanf() {
+//     engine.tick();
 
-    engine.draw();
+//     engine.draw();
 
-    engine.camera.scale += (targetScale - engine.camera.scale) / 10;
+//     engine.camera.scale += (targetScale - engine.camera.scale) / 10;
 
-    const X = engine.canvas.X;
-    X.strokeStyle = "#f00";
-    X.lineWidth = 4;
-    X.beginPath();
-    X.rect(0, 0, engine.canvas.width, engine.canvas.height);
-    X.stroke();
+//     const X = engine.canvas.X;
+//     X.strokeStyle = "#f00";
+//     X.lineWidth = 4;
+//     X.beginPath();
+//     X.rect(0, 0, engine.canvas.width, engine.canvas.height);
+//     X.stroke();
 
-    requestAnimationFrame(requanf);
-}
+//     requestAnimationFrame(requanf);
+// }
 
 let zoomedIn = false;
 let targetScale = 1;
 
-setInterval(() => {
-    if (zoomedIn) {
-        targetScale = 1;
-        zoomedIn = false;
-    } else {
-        targetScale = 1.2;
-        zoomedIn = true;
-    }
-}, 750);
+// setInterval(() => {
+//     if (zoomedIn) {
+//         targetScale = 1;
+//         zoomedIn = false;
+//     } else {
+//         targetScale = 1.2;
+//         zoomedIn = true;
+//     }
+// }, 750);
 
 
 engine.htmlOverlay.elm.append(
@@ -159,7 +168,7 @@ square3.rect.y += 100;
 engine.camera.attachTo(square3);
 engine.world.addElm(square3);
 
-requanf();
+// requanf();
 
 console.log(engine);
 
