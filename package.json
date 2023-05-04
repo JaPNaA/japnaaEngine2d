@@ -1,0 +1,19 @@
+{
+  "name": "japnaaengine2d",
+  "version": "1.0.0",
+  "description": "JaPNaAEngine 2d is a JavaScript/TypeScript engine library optimized for 2d games on the web.",
+  "main": "./src/JaPNaAEngine2d.ts",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/JaPNaA/japnaaEngine2d.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/JaPNaA/japnaaEngine2d/issues"
+  },
+  "homepage": "https://github.com/JaPNaA/japnaaEngine2d#readme"
+}
