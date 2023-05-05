@@ -1,5 +1,4 @@
 import { JaPNaAEngine2d } from "../JaPNaAEngine2d.js";
-import { DirtyArray } from "../util/DirtyArray.js";
 import { removeElmFromArray } from "../util/removeElmFromArray.js";
 import { WorldElm } from "./WorldElm.js";
 
