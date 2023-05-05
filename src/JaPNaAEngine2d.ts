@@ -3,6 +3,8 @@ import { Canvas, CanvasOptions } from "./Canvas.js";
 import { ParentWorldElm } from "./canvasElm/ParentWorldElm.js";
 import { WorldElm } from "./canvasElm/WorldElm.js";
 import { SubscriptionsComponent } from "./canvasElm/components/SubscriptionsComponent.js";
+import { KeyboardMovementComponent } from "./canvasElm/components/KeyboardMovementComponent.js";
+import { ParentComponent } from "./canvasElm/components/ParentComponent.js";
 import { CanvasSizeOptions, CanvasSizer } from "./CanvasSizer.js";
 import { CollisionSystem, CollisionSystemQuadTree, CollisionSystemSimple, CollisionSystemSorted, NoCollisionSystem } from "./collision/CollisionSystem.js";
 import { Component, Elm, InputElm } from "./elements.js";
@@ -11,10 +13,12 @@ import { KeyboardInput } from "./KeyboardInput.js";
 import { MouseInput, MouseInputWithCollision, MouseInputWithoutCollision } from "./MouseInput.js";
 import { Ticker } from "./Ticker.js";
 import { World } from "./World.js";
-import { KeyboardMovementComponent } from "./canvasElm/components/KeyboardMovementComponent.js";
 import { WorldElmWithComponents } from "./canvasElm/WorldElmWithComponents.js";
-import { Vec2 } from "./geometry/Vec2.js";
+import { Vec2, Vec2M } from "./geometry/Vec2.js";
 import { CollisionReactionMap } from "./collision/CollisionReactionMap.js";
+import { PrerenderCanvas } from "./PrerenderCanvas.js";
+import { Collidable, Hitbox } from "./collision/Hitbox.js";
+import { Rectangle, RectangleM } from "./geometry/Rectangle.js";
 
 export class JaPNaAEngine2d {
     /** Keyboard input */
@@ -167,9 +171,13 @@ export class JaPNaAEngine2d {
 // include elements.ts exports
 export { Elm, InputElm, Component };
 // include world elements
-export { ParentWorldElm, WorldElm, WorldElmWithComponents }
+export { ParentWorldElm, WorldElm, WorldElmWithComponents };
 // include world element components
-export { SubscriptionsComponent, KeyboardMovementComponent }
+export { SubscriptionsComponent, KeyboardMovementComponent, ParentComponent };
+// include collision, geometry
+export { Hitbox, Collidable, RectangleM, Rectangle, Vec2M, Vec2 };
+// include other stuff
+export { PrerenderCanvas };
 
 /**
  * Default CanvasSizeOptions
