@@ -54,15 +54,31 @@ export class CanvasSizer {
     private waitingForResize = false;
     private resizeAnimationFrameRequestId = 0;
 
+    /**
+     * For when the parent element is not document.body
+     */
+    private resizeObserver?: ResizeObserver;
 
-    constructor(private options: Required<CanvasSizeOptions>) {
+
+    constructor(private options: Required<CanvasSizeOptions>, public readonly isFullscreen = true, public readonly parentElement?: HTMLElement) {
         this.resizeHandler = this.resizeHandler.bind(this);
-        addEventListener("resize", this.resizeHandler);
-        this.resizeOnConstraints(innerWidth, innerHeight);
+        if (isFullscreen) {
+            addEventListener("resize", this.resizeHandler);
+        } else if (this.parentElement) {
+            this.resizeObserver = new ResizeObserver(this.resizeHandler);
+            this.resizeObserver.observe(this.parentElement);
+        } else {
+            throw new Error("If not fullscreen, the parent element must be specified.");
+        }
+        this.findConstraintsAndResize();
     }
 
     public _dispose() {
-        removeEventListener("resize", this.resizeHandler);
+        if (this.isFullscreen) {
+            removeEventListener("resize", this.resizeHandler);
+        } else {
+            this.resizeObserver?.disconnect();
+        }
     }
 
     /**
@@ -169,7 +185,24 @@ export class CanvasSizer {
         } else {
             this.waitingForResize = false;
             cancelAnimationFrame(this.resizeAnimationFrameRequestId);
+            this.findConstraintsAndResize();
+        }
+    }
+
+    private findConstraintsAndResize() {
+        if (this.isFullscreen) {
             this.resizeOnConstraints(innerWidth, innerHeight);
+        } else if (this.parentElement) {
+            if (this.parentElement.clientWidth === 0 && this.parentElement.clientHeight === 0) {
+                // wait one frame to see if the sizes change
+                requestAnimationFrame(() => {
+                    this.resizeOnConstraints(this.parentElement!.clientWidth, this.parentElement!.clientHeight);
+                });
+            } else {
+                this.resizeOnConstraints(this.parentElement.clientWidth, this.parentElement.clientHeight);
+            }
+        } else {
+            throw new Error("Not fullscreen but parent element is not specified. Cannot resize.");
         }
     }
 }

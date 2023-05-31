@@ -20,16 +20,24 @@ export abstract class MouseInput {
     public onMousedown = new EventBus<MouseEvent>();
     public onMousemove = new EventBus<MouseEvent>();
 
-    constructor() {
+    constructor(private readonly isFullscreen: boolean, private parentElement?: HTMLElement) {
         this.mouseupHandler = this.mouseupHandler.bind(this);
         this.mousedownHandler = this.mousedownHandler.bind(this);
         this.mousemoveHandler = this.mousemoveHandler.bind(this);
         this.contextmenuHandler = this.contextmenuHandler.bind(this);
 
         addEventListener("mouseup", this.mouseupHandler);
-        addEventListener("mousedown", this.mousedownHandler);
-        addEventListener("mousemove", this.mousemoveHandler);
-        addEventListener("contextmenu", this.contextmenuHandler);
+        if (this.isFullscreen) {
+            addEventListener("mousedown", this.mousedownHandler);
+            addEventListener("mousemove", this.mousemoveHandler);
+            addEventListener("contextmenu", this.contextmenuHandler);
+        } else if (this.parentElement) {
+            this.parentElement.addEventListener("mousedown", this.mousedownHandler);
+            this.parentElement.addEventListener("mousemove", this.mousemoveHandler);
+            this.parentElement.addEventListener("contextmenu", this.contextmenuHandler);
+        } else {
+            throw new Error("If not fullscreen, must specify parent element");
+        }
     }
 
     public tick() {
@@ -40,9 +48,17 @@ export abstract class MouseInput {
 
     public _dispose() {
         removeEventListener("mouseup", this.mouseupHandler);
-        removeEventListener("mousedown", this.mousedownHandler);
-        removeEventListener("mousemove", this.mousemoveHandler);
-        removeEventListener("contextmenu", this.contextmenuHandler);
+        if (this.isFullscreen) {
+            removeEventListener("mousedown", this.mousedownHandler);
+            removeEventListener("mousemove", this.mousemoveHandler);
+            removeEventListener("contextmenu", this.contextmenuHandler);
+        } else if (this.parentElement) {
+            this.parentElement.removeEventListener("mousedown", this.mousedownHandler);
+            this.parentElement.removeEventListener("mousemove", this.mousemoveHandler);
+            this.parentElement.removeEventListener("contextmenu", this.contextmenuHandler);
+        } else {
+            throw new Error("If not fullscreen, must specify parent element");
+        }
     }
 
     protected mouseupHandler(event: MouseEvent) {
@@ -64,8 +80,13 @@ export abstract class MouseInput {
     }
 
     protected mousemoveHandler(event: MouseEvent) {
-        this.screenPos.x = event.clientX;
-        this.screenPos.y = event.clientY;
+        if (this.isFullscreen) {
+            this.screenPos.x = event.clientX;
+            this.screenPos.y = event.clientY;
+        } else {
+            this.screenPos.x = event.offsetX;
+            this.screenPos.y = event.offsetY;
+        }
 
         this.onMousemove.send(event);
     }
@@ -80,8 +101,8 @@ export class MouseInputWithCollision extends MouseInput implements Collidable {
     public hitbox: Hitbox<MouseInputWithCollision>;
     public rect: RectangleM = new RectangleM(0, 0, 0, 0);
 
-    constructor() {
-        super();
+    constructor(isFullscreen: boolean, parentElement?: HTMLElement) {
+        super(isFullscreen, parentElement);
         this.hitbox = new Hitbox(this.rect, this);
     }
 

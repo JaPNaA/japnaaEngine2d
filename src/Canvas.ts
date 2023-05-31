@@ -13,6 +13,8 @@ export class Canvas {
         this.X = this.canvas.getContext("2d", { alpha: this.options.alpha })!;
         if (!this.X) { alert("Browser not supported"); throw new Error("Browser not supported: cannot get canvas context"); }
 
+        this.canvas.classList.add("JaPNaAEngine2dCanvas");
+
         this.sizer.onResize.subscribe(() => this.updateCanvasSizes());
         this.updateCanvasSizes();
     }

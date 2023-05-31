@@ -8,6 +8,8 @@ export class HTMLOverlay extends Component {
     constructor(private options: Required<HTMLOverlayOptions>, private sizer: CanvasSizer) {
         super("HTMLOverlay");
 
+        this.elm.class("JaPNaAEngine2dHTMLOverlay");
+
         this.elm.on("mousedown", e => e.stopPropagation());
         this.elm.on("keydown", e => e.stopPropagation());
         this.elm.on("keyup", e => e.stopPropagation());

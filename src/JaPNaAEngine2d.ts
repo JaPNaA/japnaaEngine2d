@@ -19,6 +19,7 @@ import { CollisionReactionMap } from "./collision/CollisionReactionMap.js";
 import { PrerenderCanvas } from "./PrerenderCanvas.js";
 import { Collidable, Hitbox } from "./collision/Hitbox.js";
 import { Rectangle, RectangleM } from "./geometry/Rectangle.js";
+import { EventBus } from "./util/EventBus.js";
 
 export class JaPNaAEngine2d {
     /** Keyboard input */
@@ -54,10 +55,12 @@ export class JaPNaAEngine2d {
             ...options
         };
 
+        const isFullscreen = this.options.parentElement === document.body;
+
         if (this.options.mouseInCollisionSystem) {
-            this.mouse = new MouseInputWithCollision();
+            this.mouse = new MouseInputWithCollision(isFullscreen, this.options.parentElement);
         } else {
-            this.mouse = new MouseInputWithoutCollision();
+            this.mouse = new MouseInputWithoutCollision(isFullscreen, this.options.parentElement);
         }
 
         this.keyboard = new KeyboardInput();
@@ -65,7 +68,23 @@ export class JaPNaAEngine2d {
         this.sizer = new CanvasSizer({
             ...defaultCanvasSizeOptions,
             ...this.options.sizing
-        });
+        }, isFullscreen, this.options.parentElement);
+
+        if (isFullscreen) {
+            const style = document.createElement("style");
+            style.innerHTML = "body { overflow: hidden; margin: 0; } canvas.JaPNaAEngine2dCanvas, .HTMLOverlay.JaPNaAEngine2dHTMLOverlay { position: absolute; }";
+            document.head.appendChild(style);
+        } else {
+            const style = document.createElement("style");
+            style.innerHTML = "canvas.JaPNaAEngine2dCanvas, .HTMLOverlay.JaPNaAEngine2dHTMLOverlay { position: absolute; top: 0; left: 0; }";
+            document.head.appendChild(style);
+
+            // when resize called after detecting parentElement size change,
+            // we need to redraw the canvas to prevent flickering
+            if (this.options.ticks.fps !== "none") {
+                this.sizer.onResize.subscribe(() => this.draw());
+            }
+        }
 
         this.canvas = new Canvas({
             ...defaultCanvasOptions,
@@ -111,15 +130,8 @@ export class JaPNaAEngine2d {
             this.collisions.addHitbox(mouse.hitbox);
         }
 
-        if (this.options.parentElement === document.body) {
-            this.canvas.appendTo(this.options.parentElement);
-            this.htmlOverlay.appendTo(this.options.parentElement);
-            const style = document.createElement("style");
-            style.innerHTML = "body { overflow: hidden; margin: 0; } canvas, .HTMLOverlay { position: absolute; }";
-            document.head.appendChild(style);
-        } else {
-            throw new Error("Not implemented");
-        }
+        this.canvas.appendTo(this.options.parentElement);
+        this.htmlOverlay.appendTo(this.options.parentElement);
 
         this.ticker.startNormalTickLoopIfShould();
     }
@@ -176,8 +188,8 @@ export { ParentWorldElm, WorldElm, WorldElmWithComponents };
 export { SubscriptionsComponent, KeyboardMovementComponent, ParentComponent };
 // include collision, geometry
 export { Hitbox, Collidable, RectangleM, Rectangle, Vec2M, Vec2 };
-// include other stuff
-export { PrerenderCanvas };
+// include utils
+export { PrerenderCanvas, EventBus };
 
 /**
  * Default CanvasSizeOptions
