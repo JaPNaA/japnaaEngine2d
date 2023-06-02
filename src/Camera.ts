@@ -7,12 +7,10 @@ export class Camera {
     public rect = new RectangleM(0, 0, 1, 1);
     public scale: number;
 
-    private tScale: number;
-
     private attachee?: WorldElm;
 
     constructor(private sizer: CanvasSizer) {
-        this.tScale = this.scale = 1;
+        this.scale = 1;
         this.sizer.onResize.subscribe(() => {
             this.resizeHandler();
         });
@@ -20,17 +18,12 @@ export class Camera {
         this.tick();
     }
 
-    public goto(x: number, y: number, scale?: number): void {
+    public goto(pos: Vec2, scale?: number): void {
         if (scale) {
-            this.tScale = scale;
+            this.scale = scale;
         }
-        this.rect.x = x;
-        this.rect.y = y;
-    }
-
-    public gotoNoTransition(x: number, y: number, scale?: number): void {
-        this.goto(x, y, scale);
-        this.scale = this.tScale;
+        this.rect.x = pos.x;
+        this.rect.y = pos.y;
     }
 
     public move(dx: number, dy: number): void {
@@ -38,15 +31,15 @@ export class Camera {
         this.rect.y += dy;
     }
 
-    public zoomInto(factor: number, x: number, y: number): void {
+    public zoomInto(factor: number, pos: Vec2): void {
         if (!this.attachee) {
-            const dx = -(x - this.rect.x) * (factor - 1);
-            const dy = -(y - this.rect.y) * (factor - 1);
+            const dx = -(pos.x - this.rect.x) * (factor - 1);
+            const dy = -(pos.y - this.rect.y) * (factor - 1);
             this.rect.x += dx;
             this.rect.y += dy;
         }
 
-        this.tScale *= factor;
+        this.scale *= factor;
     }
 
     public applyTransform(X: CanvasRenderingContext2D): void {
