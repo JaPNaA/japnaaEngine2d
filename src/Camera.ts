@@ -33,8 +33,8 @@ export class Camera {
 
     public zoomInto(factor: number, pos: Vec2): void {
         if (!this.attachee) {
-            const dx = -(pos.x - this.rect.x) * (factor - 1);
-            const dy = -(pos.y - this.rect.y) * (factor - 1);
+            const dx = (pos.x - this.rect.centerX()) * (factor - 1);
+            const dy = (pos.y - this.rect.centerY()) * (factor - 1);
             this.rect.x += dx;
             this.rect.y += dy;
         }
