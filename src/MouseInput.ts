@@ -83,9 +83,9 @@ export abstract class MouseInput {
         if (this.isFullscreen) {
             this.screenPos.x = event.clientX;
             this.screenPos.y = event.clientY;
-        } else {
-            this.screenPos.x = event.offsetX;
-            this.screenPos.y = event.offsetY;
+        } else if (this.parentElement) {
+            this.screenPos.x = event.clientX - this.parentElement.offsetLeft;
+            this.screenPos.y = event.clientY - this.parentElement.offsetTop;
         }
 
         this.onMousemove.send(event);
