@@ -7,13 +7,16 @@ export class KeyboardInput {
     constructor() {
         this.keyupHandler = this.keyupHandler.bind(this);
         this.keydownHandler = this.keydownHandler.bind(this);
+        this.focusHandler = this.focusHandler.bind(this);
         addEventListener("keyup", this.keyupHandler);
         addEventListener("keydown", this.keydownHandler);
+        addEventListener("focus", this.focusHandler);
     }
 
     public _dispose() {
         removeEventListener("keyup", this.keyupHandler);
         removeEventListener("keydown", this.keydownHandler);
+        removeEventListener("focus", this.focusHandler);
     }
 
     /**
@@ -63,6 +66,16 @@ export class KeyboardInput {
             const newBus = new EventBus<KeyboardEvent>();
             this.eventBusses[key] = newBus;
             return newBus;
+        }
+    }
+
+    /** On focus, release recorded keydowns */
+    private focusHandler() {
+        const keys = Object.keys(this.keys);
+        for (const key of keys) {
+            if (this.keys[key]) {
+                this.keys[key] = false;
+            }
         }
     }
 
