@@ -84,8 +84,9 @@ export abstract class MouseInput {
             this.screenPos.x = event.clientX;
             this.screenPos.y = event.clientY;
         } else if (this.parentElement) {
-            this.screenPos.x = event.clientX - this.parentElement.offsetLeft;
-            this.screenPos.y = event.clientY - this.parentElement.offsetTop;
+            const boundingBox = this.parentElement.getBoundingClientRect();
+            this.screenPos.x = event.clientX - boundingBox.x;
+            this.screenPos.y = event.clientY - boundingBox.y;
         }
 
         this.onMousemove.send(event);

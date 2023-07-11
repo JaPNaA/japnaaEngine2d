@@ -84,6 +84,11 @@ export class JaPNaAEngine2d {
             if (this.options.ticks.fps !== "none") {
                 this.sizer.onResize.subscribe(() => this.draw());
             }
+
+            // MouseInput and CanvasSizer expect the parent element to be not static
+            if (getComputedStyle(this.options.parentElement).position === 'static') {
+                this.options.parentElement.style.position = 'relative';
+            }
         }
 
         this.canvas = new Canvas({
