@@ -8,7 +8,6 @@ export class Canvas {
     public get width(): number { return this.sizer.width; }
     public get height(): number { return this.sizer.height; }
 
-
     constructor(private options: Required<CanvasOptions>, private sizer: CanvasSizer) {
         this.X = this.canvas.getContext("2d", { alpha: this.options.alpha })!;
         if (!this.X) { alert("Browser not supported"); throw new Error("Browser not supported: cannot get canvas context"); }
@@ -35,9 +34,12 @@ export class Canvas {
         return this.sizer.screenPosToCanvasPos(screenPos);
     }
 
-
     public appendTo(parent: HTMLElement) {
         parent.appendChild(this.canvas);
+    }
+
+    public _dispose() {
+        this.canvas.parentElement?.removeChild(this.canvas);
     }
 }
 

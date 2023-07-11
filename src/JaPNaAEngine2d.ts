@@ -174,9 +174,12 @@ export class JaPNaAEngine2d {
     }
 
     public dispose() {
+        this.ticker._dispose();
         this.keyboard._dispose();
         this.mouse._dispose();
         this.sizer._dispose();
+        this.canvas._dispose();
+        this.htmlOverlay._dispose();
     }
 }
 

@@ -50,6 +50,10 @@ export class HTMLOverlay extends Component {
             }
         }
     }
+
+    public _dispose() {
+        this.elm.remove();
+    }
 }
 
 export interface HTMLOverlayOptions {

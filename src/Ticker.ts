@@ -43,17 +43,25 @@ export class Ticker {
             this.timeBetweenFrames = 1000 / this.options.fps;
         }
 
+        this.visibilityChangeHandler = this.visibilityChangeHandler.bind(this);
         if (this.options.visiblityHiddenBehaviour === "pause") {
-            document.addEventListener("visibilitychange", () => {
-                if (document.visibilityState === "hidden") {
-                    this.pause();
-                } else {
-                    this.resume();
-                }
-            });
+            document.addEventListener("visibilitychange", this.visibilityChangeHandler);
         }
 
         this.entities = engine.world.getElms();
+    }
+
+    public visibilityChangeHandler() {
+        if (document.visibilityState === "hidden") {
+            this.pause();
+        } else {
+            this.resume();
+        }
+    }
+
+    public _dispose() {
+        this.pause();
+        document.removeEventListener("visibilitychange", this.visibilityChangeHandler);
     }
 
     public pause() {
