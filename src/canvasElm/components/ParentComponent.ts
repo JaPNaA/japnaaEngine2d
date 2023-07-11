@@ -45,4 +45,11 @@ export class ParentComponent extends WorldElmComponent {
         removeElmFromArray(child, this.children);
         child.remove();
     }
+
+    public removeAllChildren() {
+        for (const child of this.children) {
+            child.remove();
+        }
+        this.children.length = 0;
+    }
 }
