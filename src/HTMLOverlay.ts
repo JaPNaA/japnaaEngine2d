@@ -49,6 +49,8 @@ export class HTMLOverlay extends Component {
                 elm.style.transform = "scale(" + this.sizer.scaling + ")";
             }
         }
+        elm.style.width = this.sizer.width + "px";
+        elm.style.height = this.sizer.height + "px";
     }
 
     public _dispose() {

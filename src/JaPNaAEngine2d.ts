@@ -72,11 +72,11 @@ export class JaPNaAEngine2d {
 
         if (isFullscreen) {
             const style = document.createElement("style");
-            style.innerHTML = "body { overflow: hidden; margin: 0; } canvas.JaPNaAEngine2dCanvas, .HTMLOverlay.JaPNaAEngine2dHTMLOverlay { position: absolute; }";
+            style.innerHTML = "body { overflow: hidden; margin: 0; } canvas.JaPNaAEngine2dCanvas, .HTMLOverlay.JaPNaAEngine2dHTMLOverlay { position: absolute; pointer-events: none; }";
             document.head.appendChild(style);
         } else {
             const style = document.createElement("style");
-            style.innerHTML = "canvas.JaPNaAEngine2dCanvas, .HTMLOverlay.JaPNaAEngine2dHTMLOverlay { position: absolute; top: 0; left: 0; }";
+            style.innerHTML = "canvas.JaPNaAEngine2dCanvas, .HTMLOverlay.JaPNaAEngine2dHTMLOverlay { position: absolute; pointer-events: none; top: 0; left: 0; }";
             document.head.appendChild(style);
 
             // when resize called after detecting parentElement size change,
