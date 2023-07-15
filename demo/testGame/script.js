@@ -138,10 +138,10 @@ let targetScale = 1;
 
 // setInterval(() => {
 //     if (zoomedIn) {
-//         targetScale = 1;
+//         engine.camera.setScale(1);
 //         zoomedIn = false;
 //     } else {
-//         targetScale = 1.2;
+//         engine.camera.setScale(1.2);
 //         zoomedIn = true;
 //     }
 // }, 750);

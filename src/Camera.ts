@@ -5,17 +5,17 @@ import { Vec2, Vec2M } from "./geometry/Vec2.js";
 
 export class Camera {
     public rect = new RectangleM(0, 0, 1, 1);
-    public scale: number;
+    private scale: number;
 
     private attachee?: WorldElm;
 
     constructor(private sizer: CanvasSizer) {
         this.scale = 1;
-        this.sizer.onResize.subscribe(() => {
-            this.resizeHandler();
-        });
-        this.resizeHandler();
         this.tick();
+        this.sizer.onResize.subscribe(() => {
+            this.updateSize();
+        });
+        this.updateSize();
     }
 
     public goto(pos: Vec2, scale?: number): void {
@@ -31,21 +31,31 @@ export class Camera {
         this.rect.y += dy;
     }
 
+    public getScale() {
+        return this.scale;
+    }
+
+    public setScale(scale: number): void {
+        this.scale = scale;
+        this.updateSize();
+    }
+
     public zoomInto(factor: number, pos: Vec2): void {
         if (!this.attachee) {
-            const dx = (pos.x - this.rect.centerX()) * (factor - 1);
-            const dy = (pos.y - this.rect.centerY()) * (factor - 1);
+            const dx = (pos.x - this.rect.x) * (1 - 1 / factor)
+            const dy = (pos.y - this.rect.y) * (1 - 1 / factor)
             this.rect.x += dx;
             this.rect.y += dy;
         }
 
         this.scale *= factor;
+
+        this.updateSize();
     }
 
     public applyTransform(X: CanvasRenderingContext2D): void {
-        X.translate(this.rect.width / 2, this.rect.height / 2);
         X.scale(this.scale, this.scale);
-        X.translate(-this.rect.centerX(), -this.rect.centerY());
+        X.translate(-this.rect.x, -this.rect.y);
     }
 
     public applyTranslateOnly(X: CanvasRenderingContext2D): void {
@@ -54,8 +64,8 @@ export class Camera {
 
     public canvasToWorldPos(canvasPos: Vec2): Vec2 {
         return new Vec2M(
-            (canvasPos.x - this.rect.width / 2) / this.scale + this.rect.centerX(),
-            (canvasPos.y - this.rect.height / 2) / this.scale + this.rect.centerY()
+            canvasPos.x / this.scale + this.rect.x,
+            canvasPos.y / this.scale + this.rect.y
         );
     }
 
@@ -71,8 +81,8 @@ export class Camera {
         }
     }
 
-    private resizeHandler() {
-        this.rect.width = this.sizer.width;
-        this.rect.height = this.sizer.height;
+    private updateSize() {
+        this.rect.width = this.sizer.width / this.scale;
+        this.rect.height = this.sizer.height / this.scale;
     }
 }
