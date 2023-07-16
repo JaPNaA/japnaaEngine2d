@@ -76,9 +76,13 @@ export class Camera {
 
     public tick() {
         if (this.attachee) {
-            this.rect.x = this.attachee.rect.centerX() - this.rect.width / 2;
-            this.rect.y = this.attachee.rect.centerY() - this.rect.height / 2;
+            this.centerOn(this.attachee);
         }
+    }
+
+    public centerOn(entity: WorldElm) {
+        this.rect.x = entity.rect.centerX() - this.rect.width / 2;
+        this.rect.y = entity.rect.centerY() - this.rect.height / 2;
     }
 
     private updateSize() {
