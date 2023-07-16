@@ -20,6 +20,15 @@ export class KeyboardInput {
     }
 
     /**
+     * Handles a keydown then keyup of the event.
+     * Useful for forward keypresses from HTMLOverlay or implementing macros.
+     */
+    public pretendPress(event: KeyboardEvent): void {
+        this.keyupHandler(event);
+        this.keydownHandler(event);
+    }
+
+    /**
      * Get or create an event bus that sends messages when the specified key(s) are pressed
      * @param key the key(s) you want an event bus for
      */
