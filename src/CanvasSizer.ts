@@ -174,7 +174,11 @@ export class CanvasSizer {
 
     private resizeHandler() {
         if (!this.options.autoResize) { return; }
-        if (innerWidth === this.lastConstraintWidth && innerHeight == this.lastConstraintHeight) {
+        if (this.didConstraintsChange()) {
+            this.waitingForResize = false;
+            cancelAnimationFrame(this.resizeAnimationFrameRequestId);
+            this.findConstraintsAndResize();
+        } else {
             // Wait for resize to happen (on iOS)
             if (this.waitingForResize) { return; }
             this.waitingForResize = true;
@@ -182,10 +186,6 @@ export class CanvasSizer {
                 this.waitingForResize = false;
                 this.resizeHandler();
             });
-        } else {
-            this.waitingForResize = false;
-            cancelAnimationFrame(this.resizeAnimationFrameRequestId);
-            this.findConstraintsAndResize();
         }
     }
 
@@ -200,6 +200,20 @@ export class CanvasSizer {
                 });
             } else {
                 this.resizeOnConstraints(this.parentElement.clientWidth, this.parentElement.clientHeight);
+            }
+        } else {
+            throw new Error("Not fullscreen but parent element is not specified. Cannot resize.");
+        }
+    }
+
+    private didConstraintsChange() {
+        if (this.isFullscreen) {
+            return this.lastConstraintWidth !== innerWidth || this.lastConstraintHeight !== innerHeight;
+        } else if (this.parentElement) {
+            if (this.parentElement.clientWidth === 0 && this.parentElement.clientHeight === 0) {
+                return false;
+            } else {
+                return this.parentElement.clientWidth !== this.lastConstraintWidth || this.parentElement.clientHeight !== this.lastConstraintHeight;
             }
         } else {
             throw new Error("Not fullscreen but parent element is not specified. Cannot resize.");
