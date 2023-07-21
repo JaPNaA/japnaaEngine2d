@@ -89,6 +89,7 @@ export abstract class MouseInput {
             this.screenPos.y = event.clientY - boundingBox.y;
         }
 
+        this.tick();
         this.onMousemove.send(event);
     }
 

@@ -239,7 +239,8 @@ const defaultTickOptions: Required<TickOptions> = {
     collisionCheckEveryFixedTick: true,
     visiblityHiddenBehaviour: 'pause',
     longDelayBehaviour: 'skip',
-    longDelayLength: 0.5
+    longDelayLength: 0.5,
+    enableDirtySystem: false
 };
 
 /**
@@ -426,4 +427,17 @@ export interface TickOptions {
      * default: 0.5
      */
     longDelayLength?: number;
+
+    /**
+     * Enable the dirty system?
+     * 
+     * If this is true, fixedTick should be 'false'.
+     * 
+     * The dirty system prevents ticks and draws from running every frame. Ticks and
+     * draws will only run on a frame if the `dirty` flag is set to `true` on that frame.
+     * Call `engine.ticker.requestTick()` to set the `dirty` flag to `true` for one frame.
+     * 
+     * default: false
+     */
+    enableDirtySystem?: boolean;
 }

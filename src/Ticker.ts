@@ -16,6 +16,7 @@ export class Ticker {
     private now: number;
     private paused: boolean = false;
     private requestAnimationFrameId = -1;
+    private isDirty: boolean = false;
 
     private tickByTime: (deltaTime: number) => void;
 
@@ -41,6 +42,10 @@ export class Ticker {
 
         if (typeof this.options.fps === 'number') {
             this.timeBetweenFrames = 1000 / this.options.fps;
+        }
+
+        if (this.options.enableDirtySystem && this.options.fixedTick !== false) {
+            console.warn("Dirty system is enabled (ticks.enableDirtySystem = true) but fixed ticks are also enabled (ticks.fixedTick != false). This may cause a delay between requestFrame() and the engine beginning to draw. Disabling fixed ticks is recommended.");
         }
 
         this.visibilityChangeHandler = this.visibilityChangeHandler.bind(this);
@@ -75,6 +80,11 @@ export class Ticker {
         this.startNormalTickLoopIfShould();
     }
 
+    /** Requests to tick and render on the next requestAnimationFrame. */
+    public requestTick() { this.isDirty = true; }
+    /** Requests to cancel tick and render for the next requestAnimationFrame */
+    public requestCancelTick() { this.isDirty = false; }
+
     public startNormalTickLoopIfShould(): void {
         if (this.options.fps === 'none') { return; }
         cancelAnimationFrame(this.requestAnimationFrameId);
@@ -82,20 +92,24 @@ export class Ticker {
     }
 
     private requestAnimationFrameCallback(now: number) {
-        // to avoid keeping track of another 'lastTime' for the frames
-        this.timeSinceLastFrame += now - this.now;
-        this.now = now;
+        const wasDirty = this.isDirty;
+        this.isDirty = !this.options.enableDirtySystem;
+        if (wasDirty) {
+            // to avoid keeping track of another 'lastTime' for the frames
+            this.timeSinceLastFrame += now - this.now;
+            this.now = now;
 
-        if (this.timeSinceLastFrame > this.timeBetweenFrames) {
-            if (this.timeBetweenFrames > 0) {
-                this.timeSinceLastFrame %= this.timeBetweenFrames;
+            if (this.timeSinceLastFrame > this.timeBetweenFrames) {
+                if (this.timeBetweenFrames > 0) {
+                    this.timeSinceLastFrame %= this.timeBetweenFrames;
+                }
+
+                this.engine._tickComponents();
+                this.tickAll();
+                this.engine.draw();
+            } else {
+                console.log("frame skip");
             }
-
-            this.engine._tickComponents();
-            this.tickAll();
-            this.engine.draw();
-        } else {
-            console.log("frame skip");
         }
 
         if (!this.paused) {
