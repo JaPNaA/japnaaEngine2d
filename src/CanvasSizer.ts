@@ -37,6 +37,11 @@ export class CanvasSizer {
      */
     public scaling = 1;
 
+    /**
+     * The htmlOverlay's scaling in CSS (`= this.scaling / devicePixelRatio`).
+     */
+    public htmlScaling = 1;
+
     /** Scaling due to devicePixelRatio (may be included in scaling depending on settings) */
     private dprScaling = 1;
 
@@ -103,18 +108,18 @@ export class CanvasSizer {
         if (this.options.sizingMethod === "resize") {
             newWidth = this.boundingBoxWidth;
             newHeight = this.boundingBoxHeight;
-            this.scaling = 1;
+            this.scaling = this.htmlScaling = 1;
             this.domPixelsToWorldScale = 1;
         } else if (this.options.sizingMethod === "scale") {
             // 'scaleImage' keeps the original width / height options and uses the rendering context to zoom
             newWidth = targetWidth;
             newHeight = targetHeight;
-            this.scaling = scaling;
+            this.scaling = this.htmlScaling = scaling;
         } else { // this.options.sizingMethod === "scaleImage"
             // 'scaleImage' keeps the original width / height options and uses CSS to size the canvas instead
             newWidth = targetWidth;
             newHeight = targetHeight;
-            this.scaling = 1;
+            this.scaling = this.htmlScaling = 1;
         }
 
         // Dealing with dpr != 1.

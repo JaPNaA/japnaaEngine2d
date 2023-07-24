@@ -46,7 +46,7 @@ export class HTMLOverlay extends Component {
             }
             if (this.options.scale) {
                 elm.style.transformOrigin = "0 0";
-                elm.style.transform = "scale(" + this.sizer.scaling + ")";
+                elm.style.transform = "scale(" + this.sizer.htmlScaling + ")";
             }
         }
         elm.style.width = this.sizer.width + "px";
