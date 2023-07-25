@@ -115,7 +115,8 @@ export class Ticker {
             this.tickAll();
             this.engine.draw();
         } else {
-            console.log("frame skip");
+            // skip frame due to rendering faster than specified fps
+            this.isDirty = wasDirty; // restore previous dirtiness
         }
 
         if (!this.paused) {
