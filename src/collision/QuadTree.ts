@@ -27,7 +27,7 @@ class QuadTree implements QuadTreeChild {
     private growDepth: number;
 
     /**
-     * @param size max width and height of the quad tree
+     * @param size initial width and height of the quad tree
      */
     constructor(size: number) {
         this.elements = [];
