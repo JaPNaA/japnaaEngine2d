@@ -20,6 +20,9 @@ const engine = new JaPNaAEngine2d({
         maxTickDeltaTime: false,
         normalTicks: true,
         longDelayLength: 1
+    },
+    render: {
+        culling: 'cameraCollisions'
     }
 });
 
