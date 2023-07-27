@@ -12,13 +12,24 @@ import { QuadTree, QuadTreeHitbox } from "../../collision/QuadTree.js";
  */
 export class QuadtreeParentComponent extends WorldElmComponent {
     private children: WorldElm[] = [];
-    private quadtree = new QuadTree<WorldElm>(1447); // 1447 is an arbitrary initial size
+    private quadtree = new QuadTree<QuadtreeElmChild>(1447); // 1447 is an arbitrary initial size
+    private lastDrawnChildren = new Set<QuadtreeElmChild>();
 
     public draw() {
         const elms = this.quadtree.query(this.engine.camera.rect);
 
         for (const child of elms) {
             child.elm.draw();
+            this.lastDrawnChildren.delete(child.elm);
+        }
+
+        for (const child of this.lastDrawnChildren) {
+            child.onExitView?.();
+        }
+
+        this.lastDrawnChildren.clear();
+        for (const child of elms) {
+            this.lastDrawnChildren.add(child.elm);
         }
     }
 
@@ -84,4 +95,10 @@ export interface QuadtreeElmChild extends WorldElm {
      * DO NOT REASSIGN.
      */
     graphicHitbox: Hitbox<QuadtreeElmChild>;
+
+    /**
+     * Called when the child is no longer colliding with the camera and draw
+     * calls have stopped.
+     */
+    onExitView?(): void;
 }
