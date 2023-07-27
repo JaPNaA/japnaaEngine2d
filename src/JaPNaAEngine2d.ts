@@ -20,6 +20,7 @@ import { PrerenderCanvas } from "./PrerenderCanvas.js";
 import { Collidable, Hitbox } from "./collision/Hitbox.js";
 import { Rectangle, RectangleM } from "./geometry/Rectangle.js";
 import { EventBus } from "./util/EventBus.js";
+import { Renderer } from "./Renderer.js";
 
 export class JaPNaAEngine2d {
     /** Keyboard input */
@@ -45,7 +46,8 @@ export class JaPNaAEngine2d {
     public world: World;
     /** Controls timing of events in the engine */
     public ticker: Ticker;
-    // public renderer: Renderer;
+    /** Renders the scene */
+    public renderer: Renderer;
 
     private options: Required<JaPNaAEngine2dOptions>;
 
@@ -82,7 +84,7 @@ export class JaPNaAEngine2d {
             // when resize called after detecting parentElement size change,
             // we need to redraw the canvas to prevent flickering
             if (this.options.ticks.fps !== "none") {
-                this.sizer.onResize.subscribe(() => this.draw());
+                this.sizer.onResize.subscribe(() => this.renderer.render());
             }
 
             // MouseInput and CanvasSizer expect the parent element to be not static
@@ -139,6 +141,10 @@ export class JaPNaAEngine2d {
             ...defaultTickOptions,
             ...this.options.ticks
         });
+        this.renderer = new Renderer(this, {
+            ...defaultRenderOptions,
+            ...this.options.render
+        });
 
         const screenToWorldPos = (screenPos: Vec2) => this.camera.canvasToWorldPos(this.canvas.screenPosToCanvasPos(screenPos));
         this.htmlOverlay._screenToWorldPos = this.mouse._screenToWorldPos = screenToWorldPos;
@@ -170,25 +176,6 @@ export class JaPNaAEngine2d {
     public _tickComponents() {
         this.mouse.tick();
         // this.ticker.tickAll(this.world.getElms());
-    }
-
-    // todo: make private
-    public draw() {
-        const X = this.canvas.X;
-        this.camera.tick();
-        this.htmlOverlay.tick();
-
-        X.clearRect(0, 0, this.canvas.width, this.canvas.height);
-
-        X.save();
-
-        this.camera.applyTransform(X);
-
-        for (const elm of this.world.getElms()) {
-            elm.draw();
-        }
-
-        X.restore();
     }
 
     public dispose() {
@@ -265,6 +252,13 @@ const defaultCollisionOptions: Required<CollisionOptions> = {
 };
 
 /**
+ * Default renderer options
+ */
+const defaultRenderOptions: Required<RenderOptions> = {
+    culling: "none"
+};
+
+/**
  * Default JaPNaAEngine2dOptions
  */
 const defaultJaPNaAEngineOptions: Required<JaPNaAEngine2dOptions> = {
@@ -274,6 +268,7 @@ const defaultJaPNaAEngineOptions: Required<JaPNaAEngine2dOptions> = {
     ticks: defaultTickOptions,
     collision: defaultCollisionOptions,
     parentElement: document.body,
+    render: defaultRenderOptions,
     touchInputAsMouseInput: true,
     mouseInCollisionSystem: true
 };
@@ -301,7 +296,7 @@ export interface JaPNaAEngine2dOptions {
     sizing?: CanvasSizeOptions;
 
     /**
-     * Performance options related to ticking and frames.
+     * Performance and timing options related to ticking and frames.
      * 
      * By default, the fps and normal ticks rate is automatic. Fixed ticks run
      * 120 times a second. The engine stops ticking when the game is not
@@ -310,12 +305,17 @@ export interface JaPNaAEngine2dOptions {
     ticks?: TickOptions;
 
     /**
-     * Options related to the collision system.
+     * Performanace options related to the collision system.
      * 
      * By default, the engine uses a QuadTree and automatically checks
      * collisions and triggers reactions.
      */
     collision?: CollisionSystemName | CollisionOptions;
+
+    /**
+     * Performance options related to rendering one frame.
+     */
+    render?: RenderOptions;
 
     /**
      * A parent element for the HTMLCanvas.
@@ -486,4 +486,26 @@ export interface CollisionOptions {
      * `ticks.collisionCheckEveryFixedTick`.
      */
     autoCheck?: boolean;
+}
+
+export interface RenderOptions {
+    /**
+     * How does the renderer determine which elements to `draw`?
+     * 
+     *   - 'none' - all elements are always drawn during rendering
+     *     - May be a performance issue if there are hundreds of elements to
+     *       draw each frame
+     *   - 'cameraCollisions' - only elements that collide with the camera in
+     *     the collision system drawn.
+     *     - Useful if all elements have hitboxes, and all elements' graphics
+     *       are fully contained in their hitbox
+     *   - 'rendererQuadtree' - only elements that have registered a quadtree
+     *     - Create a *new* quadtree only used to determine if elements should
+     *       be drawn.
+     *     - You must register `RendererHitbox`es with
+     *       `engine.renderer.addHitbox` for the element to be drawn.
+     * 
+     * default: 'none'
+     */
+    culling: "none" | "cameraCollisions" | "rendererQuadtree";
 }

@@ -113,7 +113,7 @@ export class Ticker {
 
             this.engine._tickComponents();
             this.tickAll();
-            this.engine.draw();
+            this.engine.renderer.render();
         } else {
             // skip frame due to rendering faster than specified fps
             this.isDirty = wasDirty; // restore previous dirtiness
