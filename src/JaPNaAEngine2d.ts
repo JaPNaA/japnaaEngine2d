@@ -102,19 +102,32 @@ export class JaPNaAEngine2d {
         }, this.sizer);
 
         this.camera = new Camera(this.sizer);
-        if (this.options.collision === "none") {
-            this.collisions = new NoCollisionSystem();
-        } else if (this.options.collision === "quadTree") {
-            this.collisions = new CollisionSystemQuadTree();
-        } else if (this.options.collision === "simple") {
-            this.collisions = new CollisionSystemSimple();
+
+        if (typeof this.options.collision === "string") {
+            this.options.collision = {
+                ...defaultCollisionOptions,
+                system: this.options.collision
+            };
+        }
+
+        const collisionOptions: Required<CollisionOptions> = {
+            ...defaultCollisionOptions,
+            ...this.options.collision
+        };
+
+        if (collisionOptions.system === "none") {
+            this.collisions = new NoCollisionSystem(collisionOptions);
+        } else if (collisionOptions.system === "quadTree") {
+            this.collisions = new CollisionSystemQuadTree(collisionOptions);
+        } else if (collisionOptions.system === "simple") {
+            this.collisions = new CollisionSystemSimple(collisionOptions);
         } else {
-            const collisionSystemSorted = new CollisionSystemSorted();
+            const collisionSystemSorted = new CollisionSystemSorted(collisionOptions);
             this.collisions = collisionSystemSorted;
-            if (this.options.collision === "sortedX") {
+            if (collisionOptions.system === "sortedX") {
                 collisionSystemSorted.axisFixed = true;
                 collisionSystemSorted.useYAxis = false;
-            } else if (this.options.collision === "sortedY") {
+            } else if (collisionOptions.system === "sortedY") {
                 collisionSystemSorted.axisFixed = true;
                 collisionSystemSorted.useYAxis = true;
             }
@@ -244,6 +257,14 @@ const defaultTickOptions: Required<TickOptions> = {
 };
 
 /**
+ * Default CollisionOptions
+ */
+const defaultCollisionOptions: Required<CollisionOptions> = {
+    system: 'quadTree',
+    autoCheck: true
+};
+
+/**
  * Default JaPNaAEngine2dOptions
  */
 const defaultJaPNaAEngineOptions: Required<JaPNaAEngine2dOptions> = {
@@ -251,7 +272,7 @@ const defaultJaPNaAEngineOptions: Required<JaPNaAEngine2dOptions> = {
     htmlOverlay: defaultHTMLOverlayOptions,
     sizing: defaultCanvasSizeOptions,
     ticks: defaultTickOptions,
-    collision: 'sortedAuto',
+    collision: defaultCollisionOptions,
     parentElement: document.body,
     touchInputAsMouseInput: true,
     mouseInCollisionSystem: true
@@ -289,19 +310,12 @@ export interface JaPNaAEngine2dOptions {
     ticks?: TickOptions;
 
     /**
-     * Selects the system to use for collision detection.
+     * Options related to the collision system.
      * 
-     *   - 'none' - collisions are not detected
-     *   - 'simple' - every object's aabb bounding boxes are checked with every other
-     *   - 'sortedX' / 'sortedY' / 'sortedAuto' - sorts every object by x or y axis, then checks collisions with neighbors on x/y axis
-     *     - Faster if most of your objects are lined up in a straight line (ex. side-scrolling)
-     *   - 'quadTree' - organizes objects in a quadTree and checks collisions with nearby objects
-     *     - Hitboxes in the collision system will be converted to QuadTreeHitboxes
-     *     - Faster for large maps in both axis.
-     * 
-     * default: 'sortedAuto'
+     * By default, the engine uses a QuadTree and automatically checks
+     * collisions and triggers reactions.
      */
-    collision?: 'none' | 'simple' | 'sortedX' | 'sortedY' | 'sortedAuto' | 'quadTree';
+    collision?: CollisionSystemName | CollisionOptions;
 
     /**
      * A parent element for the HTMLCanvas.
@@ -390,7 +404,8 @@ export interface TickOptions {
      * If disabled, consider using maxTickDeltaTime to ensure things don't
      * pass through walls.
      * 
-     * This option only has an effect is fixedTick is not false.
+     * This option only has an effect is `ticks.fixedTick` and
+     * `collisions.autoCheck` is true.
      * 
      * default: true
      */
@@ -435,9 +450,40 @@ export interface TickOptions {
      * 
      * The dirty system prevents ticks and draws from running every frame. Ticks and
      * draws will only run on a frame if the `dirty` flag is set to `true` on that frame.
-     * Call `engine.ticker.requestTick()` to set the `dirty` flag to `true` for one frame.
+     * Call `engine.ticker.requestTick` to set the `dirty` flag to `true` for one frame.
      * 
      * default: false
      */
     enableDirtySystem?: boolean;
+}
+
+type CollisionSystemName = 'none' | 'simple' | 'sortedX' | 'sortedY' | 'sortedAuto' | 'quadTree';
+
+export interface CollisionOptions {
+    /**
+     * Selects the system to use for collision detection.
+     * 
+     *   - 'none' - collisions are not detected
+     *   - 'simple' - every object's aabb bounding boxes are checked with every other
+     *   - 'sortedX' / 'sortedY' / 'sortedAuto' - sorts every object by x or y axis, then checks collisions with neighbors on x/y axis
+     *     - Faster if most of your objects are lined up in a straight line (ex. side-scrolling)
+     *   - 'quadTree' - organizes objects in a quadTree and checks collisions with nearby objects
+     *     - Hitboxes in the collision system will be converted to QuadTreeHitboxes
+     *     - Faster for large maps in both axis.
+     * 
+     * default: 'quadTree'
+     */
+    system?: CollisionSystemName;
+
+    /**
+     * If true, automatically check for collisions and trigger reactions
+     * between all registered HitBoxes in the collision system.
+     * 
+     * If false, you can still check collisions by calling
+     * `engine.collisions.getCollisionsWith`.
+     * 
+     * Note: Disabling autoChecking for fixed ticks only is specified in
+     * `ticks.collisionCheckEveryFixedTick`.
+     */
+    autoCheck?: boolean;
 }

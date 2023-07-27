@@ -3,10 +3,12 @@ import { removeElmFromArray } from "../util/removeElmFromArray.js";
 import { QuadTree } from "./QuadTree.js";
 import { CollisionReactionMap } from "./CollisionReactionMap.js";
 import { Collidable, Hitbox } from "./Hitbox.js";
+import { CollisionOptions } from "../JaPNaAEngine2d.js";
 
 const SLEEP_THRESHOLD = 0.0000005;
 
 export interface CollisionSystem {
+    autoCheck: boolean;
     addHitbox(hitbox: Hitbox<any>): void;
     removeHitbox(hitbox: Hitbox<any>): void;
     getCollisionsWith(rectangle: Rectangle): Hitbox<any>[];
@@ -25,11 +27,17 @@ export interface QuadTreeHitbox<T extends Collidable> {
  * Collision system with hitboxes organized in a quadtree.
  */
 export class CollisionSystemQuadTree implements CollisionSystem {
+    public autoCheck: boolean;
+
     private reactions!: CollisionReactionMap;
     private quadTree = new QuadTree(1447); // initial start at 1447 (arbitrary); todo: make modifyable through settings
     private sleepingArray = new Array(10);
 
     private hitboxes: QuadTreeHitbox<any>[] = [];
+
+    constructor(options: Required<CollisionOptions>) {
+        this.autoCheck = options.autoCheck;
+    }
 
     public addHitbox(hitbox: QuadTreeHitbox<any>) {
         hitbox._collidedWith = [];
@@ -76,14 +84,16 @@ export class CollisionSystemQuadTree implements CollisionSystem {
             }
         }
 
-        for (let i = 0; i < numHitboxes; i++) {
-            const hitbox = this.hitboxes[i];
-            if (this.sleepingArray[i]) { continue; }
-            const collisions = this.quadTree.query(hitbox.rectangle);
-            for (const collision of collisions) {
-                if (collision !== hitbox && !collision._collidedWith.includes(hitbox)) {
-                    this.reactions.triggerReaction(hitbox, collision);
-                    hitbox._collidedWith.push(collision);
+        if (this.autoCheck) {
+            for (let i = 0; i < numHitboxes; i++) {
+                const hitbox = this.hitboxes[i];
+                if (this.sleepingArray[i]) { continue; }
+                const collisions = this.quadTree.query(hitbox.rectangle);
+                for (const collision of collisions) {
+                    if (collision !== hitbox && !collision._collidedWith.includes(hitbox)) {
+                        this.reactions.triggerReaction(hitbox, collision);
+                        hitbox._collidedWith.push(collision);
+                    }
                 }
             }
         }
@@ -97,9 +107,14 @@ export class CollisionSystemQuadTree implements CollisionSystem {
  * bounding box with another.
  */
 export class CollisionSystemSimple implements CollisionSystem {
+    public autoCheck: boolean;
     private reactions!: CollisionReactionMap;
 
     private hitboxes: Hitbox<any>[] = [];
+
+    constructor(options: Required<CollisionOptions>) {
+        this.autoCheck = options.autoCheck;
+    }
 
     public addHitbox(rectangle: Hitbox<any>) {
         this.hitboxes.push(rectangle);
@@ -128,6 +143,7 @@ export class CollisionSystemSimple implements CollisionSystem {
     public _setReactions(reactions: CollisionReactionMap) { this.reactions = reactions; }
 
     public _checkCollisions() {
+        if (!this.autoCheck) { return; }
         const numHitboxes = this.hitboxes.length;
 
         for (let i = 0; i < numHitboxes; i++) {
@@ -155,11 +171,16 @@ export class CollisionSystemSimple implements CollisionSystem {
  * on an axis, then comparing nodes nearby.
  */
 export class CollisionSystemSorted implements CollisionSystem {
+    public autoCheck: boolean;
     public useYAxis = false;
     public axisFixed = false;
     private reactions!: CollisionReactionMap;
 
     private hitboxes: Hitbox<any>[] = [];
+
+    constructor(options: Required<CollisionOptions>) {
+        this.autoCheck = options.autoCheck;
+    }
 
     public addHitbox(rectangle: Hitbox<any>) {
         this.hitboxes.push(rectangle);
@@ -188,6 +209,7 @@ export class CollisionSystemSorted implements CollisionSystem {
     public _setReactions(reactions: CollisionReactionMap) { this.reactions = reactions; }
 
     public _checkCollisions() {
+        if (!this.autoCheck) { return; }
         const numHitboxes = this.hitboxes.length;
         // note about the repeated code:
         //   it's for the speed
@@ -299,6 +321,8 @@ export class CollisionSystemSorted implements CollisionSystem {
  * A collision system that does nothing. No collisions are detected.
  */
 export class NoCollisionSystem implements CollisionSystem {
+    public autoCheck = false;
+    constructor(options: Required<CollisionOptions>) { }
     public addHitbox() { }
     public removeHitbox() { }
     public getCollisionsWith() { return []; }
