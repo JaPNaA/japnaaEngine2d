@@ -5,6 +5,6 @@ export interface Collidable {
     onCollision?: (other: Collidable) => void;
 }
 
-export class Hitbox<T extends Collidable> {
+export class Hitbox<T> {
     constructor(public rectangle: RectangleM, public elm: T) { }
 }

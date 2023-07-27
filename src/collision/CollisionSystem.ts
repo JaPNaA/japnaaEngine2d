@@ -1,6 +1,6 @@
 import { Rectangle, RectangleM } from "../geometry/Rectangle.js";
 import { removeElmFromArray } from "../util/removeElmFromArray.js";
-import { QuadTree } from "./QuadTree.js";
+import { QuadTree, QuadTreeHitbox } from "./QuadTree.js";
 import { CollisionReactionMap } from "./CollisionReactionMap.js";
 import { Collidable, Hitbox } from "./Hitbox.js";
 import { CollisionOptions } from "../JaPNaAEngine2d.js";
@@ -16,13 +16,6 @@ export interface CollisionSystem {
     _checkCollisions(): void;
 }
 
-export interface QuadTreeHitbox<T extends Collidable> {
-    rectangle: RectangleM;
-    elm: T;
-    _quadTreeRecord: RectangleM;
-    _collidedWith: Hitbox<Collidable>[];
-}
-
 /**
  * Collision system with hitboxes organized in a quadtree.
  */
@@ -30,7 +23,7 @@ export class CollisionSystemQuadTree implements CollisionSystem {
     public autoCheck: boolean;
 
     private reactions!: CollisionReactionMap;
-    private quadTree = new QuadTree(1447); // initial start at 1447 (arbitrary); todo: make modifyable through settings
+    private quadTree = new QuadTree<Collidable>(1447); // initial start at 1447 (arbitrary); todo: make modifyable through settings
     private sleepingArray = new Array(10);
 
     private hitboxes: QuadTreeHitbox<Collidable>[] = [];
