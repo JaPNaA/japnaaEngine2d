@@ -9,9 +9,9 @@ const SLEEP_THRESHOLD = 0.0000005;
 
 export interface CollisionSystem {
     autoCheck: boolean;
-    addHitbox(hitbox: Hitbox<any>): void;
-    removeHitbox(hitbox: Hitbox<any>): void;
-    getCollisionsWith(rectangle: Rectangle): Hitbox<any>[];
+    addHitbox(hitbox: Hitbox<Collidable>): void;
+    removeHitbox(hitbox: Hitbox<Collidable>): void;
+    getCollisionsWith(rectangle: Rectangle): Hitbox<Collidable>[];
     _setReactions(reactions: CollisionReactionMap): void;
     _checkCollisions(): void;
 }
@@ -33,25 +33,25 @@ export class CollisionSystemQuadTree implements CollisionSystem {
     private quadTree = new QuadTree(1447); // initial start at 1447 (arbitrary); todo: make modifyable through settings
     private sleepingArray = new Array(10);
 
-    private hitboxes: QuadTreeHitbox<any>[] = [];
+    private hitboxes: QuadTreeHitbox<Collidable>[] = [];
 
     constructor(options: Required<CollisionOptions>) {
         this.autoCheck = options.autoCheck;
     }
 
-    public addHitbox(hitbox: QuadTreeHitbox<any>) {
+    public addHitbox(hitbox: QuadTreeHitbox<Collidable>) {
         hitbox._collidedWith = [];
         hitbox._quadTreeRecord = new RectangleM(0, 0, 0, 0);
         this.hitboxes.push(hitbox);
         this.quadTree.add(hitbox);
     }
 
-    public removeHitbox(hitbox: QuadTreeHitbox<any>) {
+    public removeHitbox(hitbox: QuadTreeHitbox<Collidable>) {
         removeElmFromArray(hitbox, this.hitboxes);
         this.quadTree.remove(hitbox);
     }
 
-    public getCollisionsWith(rectangle: Rectangle): Hitbox<any>[] {
+    public getCollisionsWith(rectangle: Rectangle): Hitbox<Collidable>[] {
         return this.quadTree.query(rectangle);
     }
 
@@ -110,22 +110,22 @@ export class CollisionSystemSimple implements CollisionSystem {
     public autoCheck: boolean;
     private reactions!: CollisionReactionMap;
 
-    private hitboxes: Hitbox<any>[] = [];
+    private hitboxes: Hitbox<Collidable>[] = [];
 
     constructor(options: Required<CollisionOptions>) {
         this.autoCheck = options.autoCheck;
     }
 
-    public addHitbox(rectangle: Hitbox<any>) {
+    public addHitbox(rectangle: Hitbox<Collidable>) {
         this.hitboxes.push(rectangle);
     }
 
-    public removeHitbox(rectangle: Hitbox<any>) {
+    public removeHitbox(rectangle: Hitbox<Collidable>) {
         removeElmFromArray(rectangle, this.hitboxes);
     }
 
-    public getCollisionsWith(rectangle: Rectangle): Hitbox<any>[] {
-        const colliding: Hitbox<any>[] = [];
+    public getCollisionsWith(rectangle: Rectangle): Hitbox<Collidable>[] {
+        const colliding: Hitbox<Collidable>[] = [];
         for (const hitbox of this.hitboxes) {
             const hitboxRect = hitbox.rectangle;
             // if (RectangleM.isColliding(rectangle, hitbox.rectangle)) {
@@ -176,22 +176,22 @@ export class CollisionSystemSorted implements CollisionSystem {
     public axisFixed = false;
     private reactions!: CollisionReactionMap;
 
-    private hitboxes: Hitbox<any>[] = [];
+    private hitboxes: Hitbox<Collidable>[] = [];
 
     constructor(options: Required<CollisionOptions>) {
         this.autoCheck = options.autoCheck;
     }
 
-    public addHitbox(rectangle: Hitbox<any>) {
+    public addHitbox(rectangle: Hitbox<Collidable>) {
         this.hitboxes.push(rectangle);
     }
 
-    public removeHitbox(rectangle: Hitbox<any>) {
+    public removeHitbox(rectangle: Hitbox<Collidable>) {
         removeElmFromArray(rectangle, this.hitboxes);
     }
 
-    public getCollisionsWith(rectangle: Rectangle): Hitbox<any>[] {
-        const colliding: Hitbox<any>[] = [];
+    public getCollisionsWith(rectangle: Rectangle): Hitbox<Collidable>[] {
+        const colliding: Hitbox<Collidable>[] = [];
         for (const hitbox of this.hitboxes) {
             const hitboxRect = hitbox.rectangle;
             // if (RectangleM.isColliding(rectangle, hitbox.rectangle)) {
