@@ -503,6 +503,8 @@ export interface RenderOptions {
      *     the renderer.
      *     - Useful if you have a lot of elements, and the elements usually
      *       don't move.
+     *     - Consider `QuadtreeParentComponent` instead if your game uses
+     *       the `ParentComponent`.
      *     - Creates a *new* quadtree only used to determine if elements should
      *       be drawn.
      *     - You must register `Hitbox`es with `engine.renderer.addHitbox` and
