@@ -5,6 +5,7 @@ import { WorldElm } from "./canvasElm/WorldElm.js";
 import { SubscriptionsComponent } from "./canvasElm/components/SubscriptionsComponent.js";
 import { KeyboardMovementComponent } from "./canvasElm/components/KeyboardMovementComponent.js";
 import { ParentComponent } from "./canvasElm/components/ParentComponent.js";
+import { QuadtreeElmChild, QuadtreeParentComponent } from "./canvasElm/components/QuadtreeParentComponent.js";
 import { CanvasSizeOptions, CanvasSizer } from "./CanvasSizer.js";
 import { CollisionSystem, CollisionSystemQuadTree, CollisionSystemSimple, CollisionSystemSorted, NoCollisionSystem } from "./collision/CollisionSystem.js";
 import { Component, Elm, InputElm } from "./elements.js";
@@ -193,7 +194,7 @@ export { Elm, InputElm, Component };
 // include world elements
 export { ParentWorldElm, WorldElm, WorldElmWithComponents };
 // include world element components
-export { SubscriptionsComponent, KeyboardMovementComponent, ParentComponent };
+export { SubscriptionsComponent, KeyboardMovementComponent, ParentComponent, QuadtreeParentComponent, QuadtreeElmChild };
 // include collision, geometry
 export { Hitbox, Collidable, RectangleM, Rectangle, Vec2M, Vec2 };
 // include utils
