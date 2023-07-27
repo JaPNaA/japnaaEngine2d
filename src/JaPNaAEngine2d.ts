@@ -499,11 +499,15 @@ export interface RenderOptions {
      *     the collision system drawn.
      *     - Useful if all elements have hitboxes, and all elements' graphics
      *       are fully contained in their hitbox
-     *   - 'rendererQuadtree' - only elements that have registered a quadtree
-     *     - Create a *new* quadtree only used to determine if elements should
+     *   - 'rendererQuadtree' - only elements that have registered hitboxes in
+     *     the renderer.
+     *     - Useful if you have a lot of elements, and the elements usually
+     *       don't move.
+     *     - Creates a *new* quadtree only used to determine if elements should
      *       be drawn.
-     *     - You must register `RendererHitbox`es with
-     *       `engine.renderer.addHitbox` for the element to be drawn.
+     *     - You must register `Hitbox`es with `engine.renderer.addHitbox` and
+     *       update hitboxes when they move with `engine.renderer.updateHitbox`
+     *       for the element to be drawn.
      * 
      * default: 'none'
      */
