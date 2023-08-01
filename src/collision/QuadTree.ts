@@ -152,10 +152,10 @@ class QuadTree<T> implements QuadTreeChild<T> {
 
         // grow quadtree if too small
         while ( // obj not contained in root
-            (newX < this.x ||
-                newRightX > this.x + this.size ||
-                newY < this.y ||
-                newBottomY > this.y + this.size) && this.growDepth < QuadTree.maxDepth
+            (newX <= this.x ||
+                newRightX >= this.x + this.size ||
+                newY <= this.y ||
+                newBottomY >= this.y + this.size) && this.growDepth < QuadTree.maxDepth
         ) {
             if (obj.rectangle.centerX() > this.halfSize + this.x) {
                 if (obj.rectangle.centerY() > this.halfSize + this.y) {
