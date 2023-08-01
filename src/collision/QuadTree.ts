@@ -92,29 +92,24 @@ class QuadTree<T> implements QuadTreeChild<T> {
             } else {
                 if (y > cy) {
                     if (x > cx) {
-                        if (x >= cx && y >= cy) {
-                            currTree = currTree.children[0];
-                            cx += qSize;
+                        currTree = currTree.children[0];
+                        cx += qSize;
+                        cy += qSize;
+                        qSize = eSize;
+                    } else {
+                        if (rightX <= cx) {
+                            currTree = currTree.children[1];
+                            cx -= qSize;
                             cy += qSize;
                             qSize = eSize;
                         } else {
                             currTree.elements.push(obj); // put on branch if can't fully fit in leaf
                             break;
                         }
-                    } else {
-                        if (rightX <= cx && y >= cy) {
-                            currTree = currTree.children[1];
-                            cx -= qSize;
-                            cy += qSize;
-                            qSize = eSize;
-                        } else {
-                            currTree.elements.push(obj);
-                            break;
-                        }
                     }
                 } else {
                     if (x > cx) {
-                        if (x >= cx && bottomY <= cy) {
+                        if (bottomY <= cy) {
                             currTree = currTree.children[3];
                             cx += qSize;
                             cy -= qSize;
@@ -289,17 +284,12 @@ class QuadTree<T> implements QuadTreeChild<T> {
             } else {
                 if (newY > cy) {
                     if (newX > cx) {
-                        if (newX >= cx && newY >= cy) {
-                            that = that.children[0];
-                            cx += qSize;
-                            cy += qSize;
-                            qSize = eSize;
-                        } else {
-                            that.elements.push(obj); // put on branch if can't fully fit in leaf
-                            break;
-                        }
+                        that = that.children[0];
+                        cx += qSize;
+                        cy += qSize;
+                        qSize = eSize;
                     } else {
-                        if (newRightX <= cx && newY >= cy) {
+                        if (newRightX <= cx) {
                             that = that.children[1];
                             cx -= qSize;
                             cy += qSize;
@@ -311,7 +301,7 @@ class QuadTree<T> implements QuadTreeChild<T> {
                     }
                 } else {
                     if (newX > cx) {
-                        if (newX >= cx && newBottomY <= cy) {
+                        if (newBottomY <= cy) {
                             that = that.children[3];
                             cx += qSize;
                             cy -= qSize;
