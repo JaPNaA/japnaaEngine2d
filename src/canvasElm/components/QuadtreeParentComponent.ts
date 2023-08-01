@@ -31,6 +31,8 @@ export class QuadtreeParentComponent extends WorldElmComponent {
         for (const child of elms) {
             this.lastDrawnChildren.add(child.elm);
         }
+
+        this.quadtree.shrinkRootIfCan();
     }
 
     public tick() {
