@@ -1,6 +1,6 @@
 /**
  * Helper class for constructing element trees
- * Version 1.4 (typescript)
+ * Version 1.5.2 (typescript)
  */
 class Elm<T extends keyof HTMLElementTagNameMap = "div"> {
     protected elm: HTMLElementTagNameMap[T];
@@ -44,7 +44,7 @@ class Elm<T extends keyof HTMLElementTagNameMap = "div"> {
         this.elm.insertBefore(this._anyToNode(elm), this.elm.firstChild);
     }
 
-    appendTo(parent: HTMLElement | Elm) {
+    appendTo(parent: HTMLElement | Elm<keyof HTMLElementTagNameMap>) {
         if (parent instanceof Elm) {
             parent.append(this.elm);
         } else {
@@ -97,6 +97,10 @@ class Elm<T extends keyof HTMLElementTagNameMap = "div"> {
     attribute(key: string, value: string) {
         this.elm.setAttribute(key, value || "true");
         return this;
+    }
+
+    removeAttribute(key: string) {
+        this.elm.removeAttribute(key);
     }
 
     getHTMLElement(): HTMLElementTagNameMap[T] {
@@ -158,7 +162,7 @@ class Component {
         this.elm.class(name);
     }
 
-    appendTo(parent: HTMLElement | Elm) {
+    appendTo(parent: HTMLElement | Elm<keyof HTMLElementTagNameMap>) {
         this.elm.appendTo(parent);
         return this;
     }
