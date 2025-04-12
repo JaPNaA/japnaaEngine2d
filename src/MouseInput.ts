@@ -73,7 +73,7 @@ export abstract class MouseInput {
     protected mousedownHandler(event: MouseEvent) {
         if (event.button === 0) {
             this.leftDown = true;
-        } else {
+        } else if (event.button === 2) {
             this.rightDown = true;
         }
         this.onMousedown.send(event);
