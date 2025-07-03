@@ -8,19 +8,31 @@ import { QuadTree, QuadTreeHitbox } from "../../collision/QuadTree.js";
  * Replacement for ParentComponent that only renders children that collide
  * with the camera in a quadtree.
  * 
+ * Features:
+ *   - can set some 'alwaysRender' elements, which will continue
+ *     rendering even if off camera.
+ * 
  * Allows nesting of world elements using .addChild.
  */
 export class QuadtreeParentComponent extends WorldElmComponent {
     private children: WorldElm[] = [];
     private quadtree = new QuadTree<QuadtreeElmChild>(1447); // 1447 is an arbitrary initial size
     private lastDrawnChildren = new Set<QuadtreeElmChild>();
+    private alwaysRender = new Set<QuadtreeElmChild>();
 
     public draw() {
         const elms = this.quadtree.query(this.engine.camera.rect);
+        const remainingAlwaysRenders = new Set(this.alwaysRender);
 
         for (const child of elms) {
             child.elm.draw();
             this.lastDrawnChildren.delete(child.elm);
+            remainingAlwaysRenders.delete(child.elm);
+        }
+
+        for (const child of remainingAlwaysRenders) {
+            child.draw();
+            this.lastDrawnChildren.delete(child);
         }
 
         for (const child of this.lastDrawnChildren) {
@@ -71,9 +83,29 @@ export class QuadtreeParentComponent extends WorldElmComponent {
         }
     }
 
+    /**
+     * Mark an element as "always render." Elements that are always rendered
+     * will still be drawn if their hitboxes do not collide with the camera.
+     * 
+     * The child should be added first by {@link addChild} before calling
+     * this method. Not doing so is undefined behaviour.
+     */
+    public setAlwaysRender(child: QuadtreeElmChild) {
+        this.alwaysRender.add(child);
+    }
+
+    /**
+     * Remove an element as "always render." These elements will no longer
+     * be rendered if their hitboxes do not collide with the camera.
+     */
+    public unsetAlwaysRender(child: QuadtreeElmChild) {
+        this.alwaysRender.delete(child);
+    }
+
     public removeChild(child: QuadtreeElmChild) {
         removeElmFromArray(child, this.children);
         this.quadtree.remove(child.graphicHitbox as QuadTreeHitbox<QuadtreeElmChild>);
+        this.alwaysRender.delete(child);
         child.remove();
     }
 
@@ -82,6 +114,7 @@ export class QuadtreeParentComponent extends WorldElmComponent {
             child.remove();
         }
         this.children.length = 0;
+        this.alwaysRender.clear();
     }
 }
 
