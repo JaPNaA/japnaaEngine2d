@@ -1,4 +1,4 @@
-import { Vec2 } from "./Vec2";
+import { Vec2, Vec2M } from "./Vec2";
 
 export class RectangleM {
     constructor(public x: number, public y: number, public width: number, public height: number) { }
@@ -37,6 +37,10 @@ export class RectangleM {
 
     public bottomY() {
         return this.y + this.height;
+    }
+
+    public topLeft() {
+        return new Vec2M(this.x, this.y);
     }
 
     public copy(target: Rectangle) {
