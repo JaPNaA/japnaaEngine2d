@@ -1,4 +1,4 @@
-import { Vec2, Vec2M } from "./Vec2";
+import { Vec2, Vec2M } from "./Vec2.js";
 
 export class RectangleM {
     constructor(public x: number, public y: number, public width: number, public height: number) { }
